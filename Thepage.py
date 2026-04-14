@@ -1,6 +1,3 @@
-#### opstarten
-
-
 #### Imports
 import streamlit as st
 import pandas as pd
@@ -15,6 +12,9 @@ import numpy as np
 
 #### hervormen data
 
+
+####pagina indeling
+st.set_page_config(layout="centered")
 
 #### Begin TAB
 Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
