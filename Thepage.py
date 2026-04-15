@@ -3,6 +3,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+
+
+Fao_crops_data = pd.read_csv("fao_data_crops_data.csv.zip", compression='zip')
+
 #### cache
 
 
