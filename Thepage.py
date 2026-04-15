@@ -30,7 +30,7 @@ with Tab_1:
 #### TAB 2 diepere analyse
 with Tab_2:
   st.write("analyse")
-  st.dataframe(Fao_crops_data)
+  st.dataframe(Fao_crops_data.head(100))
   
 #### TAB 3 resultaten en conclusie
 with Tab_3:
