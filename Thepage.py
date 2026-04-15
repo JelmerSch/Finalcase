@@ -17,7 +17,7 @@ Fao_crops_data = pd.read_csv("fao_data_crops_data.csv.zip", compression='zip')
 #### hervormen data
 
 
-####pagina indeling
+#### pagina indeling
 st.set_page_config(layout="centered")
 
 #### Begin TAB
@@ -30,7 +30,8 @@ with Tab_1:
 #### TAB 2 diepere analyse
 with Tab_2:
   st.write("analyse")
-
+  st.dataframe(Fao_crops_data)
+  
 #### TAB 3 resultaten en conclusie
 with Tab_3:
   st.write("resultaten")
