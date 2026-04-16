@@ -37,20 +37,23 @@ Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 
 #### TAB 1 hoofdpagina + intro
 with Tab_1:
-  st.write("start")
+  st.write("Start")
 
 #### TAB 2 diepere analyse
 with Tab_2:
-  st.write("analyse")
+  st.write("Analyse")
+  st.write("Productie")
   st.dataframe(Fao_productie.head(500))
-  st.divider
+  st.divider()
+  st.write("Crops")
   st.dataframe(Fao_crops.head(500))
-  st.divider
+  st.divider()
+  st.write("Rampen")
   st.dataframe(rampen.head(500))
   
 #### TAB 3 resultaten en conclusie
 with Tab_3:
-  st.write("resultaten")
+  st.write("Resultaten")
 
   
 #### einde script
