@@ -17,7 +17,7 @@ def load_fao_crops(fao_data_crops_data):
 
 @st.cache_data(show_spinner="Rampen laden")
 def load_Disasters(disasters_data):
-  Rampen = pd.read_csv(1900_2021_DISASTERS, compression='zip')
+  Rampen = pd.read_csv(disasters_data, compression='zip')
   return Rampen
 
 #### session status
@@ -25,7 +25,9 @@ def load_Disasters(disasters_data):
 
 
 #### hervormen data
-
+Fao_productie = load_fao_productie("fao_data_production_indices_data.csv.zip")
+Fao_crops = load_fao_crops("fao_data_crops_data")
+rampen = load_Disasters("1900_2021_DISASTERS.csv.zip")
 
 #### pagina indeling
 st.set_page_config(layout="centered")
@@ -40,7 +42,11 @@ with Tab_1:
 #### TAB 2 diepere analyse
 with Tab_2:
   st.write("analyse")
-  st.dataframe(Fao_crops.head(100))
+  st.dataframe(Fao_productie.head(500))
+  st.divider
+  st.dataframe(Fao_crops.head(500))
+  st.divider
+  st.dataframe(rampen.head(500))
   
 #### TAB 3 resultaten en conclusie
 with Tab_3:
