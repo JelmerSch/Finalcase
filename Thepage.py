@@ -7,17 +7,17 @@ import numpy as np
 #### cache
 @st.cache_data(show_spinner="Fao productie laden")
 def load_fao_productie(fao_data_production_indices_data):
-  Fao_productie = pd.read_csv("fao_data_production_indices_data.csv.zip", compression='zip')
+  Fao_productie = pd.read_csv(fao_data_production_indices_data, compression='zip')
   return Fao_productie
 
 @st.cache_data(show_spinner="Fao crops laden")
 def load_fao_crops(fao_data_crops_data):
-  Fao_crops = pd.read_csv("fao_data_crops_data.csv.zip", compression='zip')
+  Fao_crops = pd.read_csv(fao_data_crops_data, compression='zip')
   return Fao_crops
 
 @st.cache_data(show_spinner="Rampen laden")
 def load_Disasters(disasters_data):
-  Rampen = pd.read_csv("1900_2021_DISASTERS.csv.zip", compression='zip')
+  Rampen = pd.read_csv(1900_2021_DISASTERS, compression='zip')
   return Rampen
 
 #### session status
