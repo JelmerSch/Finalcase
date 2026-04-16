@@ -26,7 +26,7 @@ def load_Disasters(disasters_data):
 
 #### hervormen data
 Fao_productie = load_fao_productie("fao_data_production_indices_data.csv.zip")
-Fao_crops = load_fao_crops("fao_data_crops_data")
+Fao_crops = load_fao_crops("fao_data_crops_data.csv.zip")
 rampen = load_Disasters("1900_2021_DISASTERS.csv.zip")
 
 #### pagina indeling
