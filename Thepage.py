@@ -20,14 +20,29 @@ def load_Disasters(disasters_data):
   Rampen = pd.read_csv(disasters_data, compression='zip')
   return Rampen
 
-#### session status
-
-
-
 #### hervormen data
 Fao_productie = load_fao_productie("fao_data_production_indices_data.csv.zip")
 Fao_crops = load_fao_crops("fao_data_crops_data.csv.zip")
 rampen = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
+
+#### session status
+if "Fao_productie" not in st.session_state:
+    st.session_state["Fao_productie"] = load_fao_productie("fao_data_production_indices_data.csv.zip")
+    else:
+      st.warning(f"Bestand niet gevonden: `{Fao_productie}`")
+      st.session_state["Fao_productie"] = None
+
+if "Fao_crops" not in st.session_state:
+    st.session_state["Fao_crops"] = load_fao_crops("fao_data_crops_data.csv.zip")
+    else:
+      st.warning(f"Bestand niet gevonden: `{Fao_crops}`")
+      st.session_state["Fao_crops"] = None
+
+if "Rampen" not in st.session_state:
+    st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
+    else:
+      st.warning(f"Bestand niet gevonden: `{rampen}`")
+      st.session_state["Rampen"] = None
 
 #### pagina indeling
 st.set_page_config(layout="centered")
