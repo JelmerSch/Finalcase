@@ -22,13 +22,13 @@ def Wereld_FAO_pivot(FAO_Wereld_data):
   ).reset_index()
 
   #aanpassen en toevoegen kolommen units en values pivot
-  FAO_pivot.columns = [
+  FAO_Wereld_data_pivot.columns = [
     '_'.join(col).strip('_') if col[1] else col[0]
-    for col in FAO_pivot.columns]
+    for col in FAO_Wereld_data_pivot.columns]
 
   #nieuwe kolom voor totale yield
-  FAO_pivot['Yield Quantities'] = (FAO_pivot['Value_Area harvested'] * FAO_pivot['Value_Yield']) / 1000
-  FAO_pivot['Unit_Yield Quantities'] = "t"
+  FAO_Wereld_data_pivot['Yield Quantities'] = (FAO_Wereld_data_pivot['Value_Area harvested'] * FAO_Wereld_data_pivot['Value_Yield']) / 1000
+  FAO_Wereld_data_pivot['Unit_Yield Quantities'] = "t"
   return FAO_Wereld_data_pivot
 
 @st.cache_data(show_spinner="Rampen laden")
