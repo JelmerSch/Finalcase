@@ -8,15 +8,10 @@ import numpy as np
 st.set_page_config(layout="centered")
 
 #### cache
-@st.cache_data(show_spinner="Fao productie laden")
-def load_fao_productie(fao_data_production_indices_data):
-  Fao_productie = pd.read_csv(fao_data_production_indices_data, compression='zip')
-  return Fao_productie
-
-@st.cache_data(show_spinner="Fao crops laden")
-def load_fao_crops(fao_data_crops_data):
-  Fao_crops = pd.read_csv(fao_data_crops_data, compression='zip')
-  return Fao_crops
+@st.cache_data(show_spinner="Fao data laden")
+def load_FAO(FAOSTAT_data):
+  FAO_data = pd.read_csv(FAOSTAT_data)
+  return FAO_data
 
 @st.cache_data(show_spinner="Rampen laden")
 def load_Disasters(disasters_data):
@@ -24,40 +19,33 @@ def load_Disasters(disasters_data):
   return Rampen
 
 #### session status
-if "Fao_productie" not in st.session_state:
-    st.session_state["Fao_productie"] = load_fao_productie("fao_data_production_indices_data.csv.zip")
-
-if "Fao_crops" not in st.session_state:
-    st.session_state["Fao_crops"] = load_fao_crops("fao_data_crops_data.csv.zip")
+if "FAO_data" not in st.session_state:
+    st.session_state["FAO_data"] = load_FAO("FAOSTAT_data_en_4-17-2026.csv")
 
 if "Rampen" not in st.session_state:
     st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
 
 #### Inladen data vanuit session state
-Fao_productie = st.session_state["Fao_productie"]
-Fao_crops = st.session_state["Fao_crops"]
+Fao_data = st.session_state["FAO_data"]
 rampen = st.session_state["Rampen"]
 
 #### Begin TAB
 Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 
-#### TAB 1 hoofdpagina + intro
+#### TAB 1 Hoofdpagina + intro
 with Tab_1:
   st.write("Start")
 
-#### TAB 2 diepere analyse
+#### TAB 2 Diepere analyse
 with Tab_2:
   st.write("Analyse")
-  st.write("Productie")
-  st.dataframe(Fao_productie.head(500))
-  st.divider()
-  st.write("Crops")
-  st.dataframe(Fao_crops.head(500))
+  st.write("Productie en yield")
+  st.dataframe(Fao_data.head(1000))
   st.divider()
   st.write("Rampen")
-  st.dataframe(rampen.head(500))
+  st.dataframe(rampen.head(1000))
   
-#### TAB 3 resultaten en conclusie
+#### TAB 3 Resultaten en conclusie
 with Tab_3:
   st.write("Resultaten")
 
