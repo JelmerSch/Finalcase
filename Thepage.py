@@ -65,7 +65,7 @@ with Tab_2:
   st.write("Analyse")
   st.write("Productie en yield")
   st.dataframe(Fao_data.head(1000))
-  st.divider
+  st.divider()
   st.write("Pivot van data")
   st.dataframe(Fao_pivot.head(500))
   st.divider()
