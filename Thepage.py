@@ -25,7 +25,7 @@ def pivot_FAO(FAO_data):
            'Item', 'Year Code', 'Year', 'Flag', 'Flag Description'],
     columns='Element',
     values=['Unit', 'Value'],
-    aggfunctie='first',
+    aggfunc='first',
   ).reset_index()
 
   #aanpassen en toevoegen kolommen units en values pivot
