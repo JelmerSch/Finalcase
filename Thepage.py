@@ -168,7 +168,7 @@ with Tab_2:
 
     fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
                               color='Gem_Productie', hover_name='Area',
-                              color_continuous_scale='Y10rRd',
+                              color_continuous_scale='Y1OrRd',
                               labels={'Gem_Productie': 'Gem Productie (t)'},
                               title=f'Gemiddelde Productie - {graan_kaart}')
     fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
