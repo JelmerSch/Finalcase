@@ -144,10 +144,7 @@ rampen_clean            = st.session_state["Rampen_clean"]
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
 
-if st.button("Clear cache"):
-    st.cache_data.clear()
-    st.cache_resource.clear()
-    st.success("Cache is geleegd!")
+
 
 #### Begin TAB
 Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
@@ -155,7 +152,10 @@ Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
   st.write("Start")
-
+  if st.button("Clear cache"):
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    st.success("Cache is geleegd!")
 
 #### TAB 2 Diepere analyse
 with Tab_2:
