@@ -127,7 +127,7 @@ if "FAO_pivot_clean" not in st.session_state:
   st.session_state["FAO_pivot_clean"] = Clean_wereld_pivot(st.session_state["FAO_pivot"])
 if "Rampen" not in st.session_state:
     st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
-if "rampen_clean" not in st.session_state:
+if "Rampen_clean" not in st.session_state:
   st.session_state["Rampen_clean"] = Clean_rampen(st.session_state["Rampen"])
 
 #### Inladen data vanuit session state
@@ -168,7 +168,7 @@ with Tab_2:
 
     fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
                               color='Gem_Productie', hover_name='Area',
-                              color_continuous_scale='y10rRd',
+                              color_continuous_scale='Y10rRd',
                               labels={'Gem_Productie': 'Gem Productie (t)'},
                               title=f'Gemiddelde Productie - {graan_kaart}')
     fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
@@ -180,8 +180,8 @@ with Tab_2:
   with st.container(border=True):
    st.write("Wereld productie van 3 soorten graan")
    graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
-   df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Aera'] == 'World') &
-                                     (Fao_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
+   df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
+                                     (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
    fig = make_subplots(specs=[[{"secondary_y": True}]])
    fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
                                name='Area harvested (ha)', line=dict(color='blue'),
@@ -190,8 +190,8 @@ with Tab_2:
                             name='Production (t)', line=dict(color='red'),
                             mode='lines', ), secondary_y=True)
    fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
-                     legend=dict(orientation='h'), yanchor='bottom', y=1.02,
-                     xanchor='right', x=1)
+                     legend=dict(orientation='h', yanchor='bottom', y=1.02,
+                     xanchor='right', x=1))
    fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
                     title_font=dict(color='blue'), tickfont=dict(color='blue'))
    fig.update_yaxes(title_text='Production (t)', secondary_y=True,
@@ -214,7 +214,7 @@ with Tab_2:
   ##rampen op een kaart
   with st.container(border=True):
     st.write("Overstromingen en droogtes per land")
-    df_ramp_totaal = (rampen_clean.goupby(['Country', 'ISO'], as_index=False)['Disaster Type']
+    df_ramp_totaal = (rampen_clean.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
                       .count().rename(columns={'Disaster Type': 'Aantal'}))
     fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
                              color='Aantal', hover_name='Country', color_continuous_scale='Blues',
