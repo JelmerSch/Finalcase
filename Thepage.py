@@ -156,6 +156,11 @@ Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
   st.write("Start")
+  ### debugging
+  st.sidebar.markdown("---")
+  if st.sidebar.button("🔄 Cache wissen & herladen"):
+    st.cache_data.clear()
+    st.rerun()
 
 #### TAB 2 Diepere analyse
 with Tab_2:
