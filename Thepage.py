@@ -161,7 +161,7 @@ with Tab_2:
     graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
     df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
       .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
-    df_kaart.columns = ['Area', 'Area Code', 'Gem_Productie']
+    df_kaart.columns = ['Area', 'Area_Code', 'Gem_Productie']
     df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
     df_kaart = df_kaart.dropna(subset=['Area_Code'])
     df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
