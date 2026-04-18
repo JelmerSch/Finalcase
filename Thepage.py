@@ -18,7 +18,7 @@ def Wereld_FAO(FAO_wereld):
 ###Cache van wereld pivot data
 @st.cache_data(show_spinner="Wereld Fao pivot")
 def Wereld_FAO_pivot(FAO_Wereld_data):
-  FAO_Wereld_data_pivot = FAO_Wereld_data.pivot_tabel(
+  FAO_Wereld_data_pivot = FAO_Wereld_data.pivot_table(
     index=['Area Code (M49)', 'Area', 'Item', 'Year', 'Flag', 'Flag Description'],
     columns='Element',
     values=['Unit', 'Value'],
@@ -31,7 +31,8 @@ def Wereld_FAO_pivot(FAO_Wereld_data):
     for col in FAO_Wereld_data_pivot.columns]
 
   #nieuwe kolom voor totale yield
-  FAO_Wereld_data_pivot['Yield Quantities'] = (FAO_Wereld_data_pivot['Value_Area harvested'] * FAO_Wereld_data_pivot['Value_Yield']) / 1000
+  FAO_Wereld_data_pivot['Yield Quantities'] = (FAO_Wereld_data_pivot['Value_Area harvested']
+                                               * FAO_Wereld_data_pivot['Value_Yield']) / 1000
   FAO_Wereld_data_pivot['Unit_Yield Quantities'] = "t"
   return FAO_Wereld_data_pivot
 
@@ -93,24 +94,24 @@ def Clean_wereld_pivot(FAO_Wereld_clean):
     .reset_index(drop=True)
   )
   #weghalen flagkolom
-  clean_wereld = clean_wereld.drop(colums='flag_rank')
+  clean_wereld = clean_wereld.drop(columns='flag_rank')
   return clean_wereld
 
 #### session status
 if "FAO_Wereld_data" not in st.session_state:
-    st.session_state["FAO_Wereld_data"] = load_FAO("FAOSTAT_wereld_data_en_4-17-2026.csv")
+    st.session_state["FAO_Wereld_data"] = Wereld_FAO("FAOSTAT_wereld_data_en_4-17-2026.csv")
 if "FAO_Wereld_data_pivot" not in st.session_state:
-    st.session_state["FAO_Wereld_data_pivot"] = pivot_FAO(st.session_state["FAO_Wereld_data"])
+    st.session_state["FAO_Wereld_data_pivot"] = Wereld_FAO_pivot(st.session_state["FAO_Wereld_data"])
 if "FAO_Wereld_pivot_clean" not in st.session_state:
   st.session_state["FAO_Wereld_pivot_clean"] = Clean_wereld_pivot(st.session_state["FAO_Wereld_data_pivot"])
-if "Rampen" not in st.session_state:
-    st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
 if "FAO_data" not in st.session_state:
     st.session_state["FAO_data"] = load_FAO("FAOSTAT_data_en_4-17-2026.csv")
 if "FAO_pivot" not in st.session_state:
     st.session_state["FAO_pivot"] = pivot_FAO(st.session_state["FAO_data"])
 if "FAO_pivot_clean" not in st.session_state:
   st.session_state["FAO_pivot_clean"] = Clean_wereld_pivot(st.session_state["FAO_pivot"])
+if "Rampen" not in st.session_state:
+    st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
 
 #### Inladen data vanuit session state
 Fao_data = st.session_state["FAO_data"]
@@ -145,7 +146,7 @@ with Tab_2:
     fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
                                name='Area harvested (ha)', line=dict(color='blue'),
                                mode='lines',), secondary_y=False)
-    fig.add_trace(go.scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
+    fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
                                name='Production (t)', line=dict(color='red'),
                                mode='lines',), secondary_y=True)
     fig.update_layout(title='Wereld productie graansoorten')
