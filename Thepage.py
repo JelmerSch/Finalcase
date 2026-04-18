@@ -75,25 +75,30 @@ def Clean_wereld_pivot(FAO_Wereld_clean):
   Values = ['Value_Area harvested', 'Value_Production', 'Value_Yield', 'Yield Quantities']
   #kolom sorteren op prio
   df = FAO_Wereld_clean.copy()
+
+  #multiIndex kolommen voorkomen
+  if isinstance(df.columns, pd.MultiIndex):
+    df.columns = ['_'.join(col).strip('_') if col[1] else col[0] for col in df.columns]
+
   df['flag_rank'] = df['Flag'].map({f: i for i, f in enumerate(Flag_prioriteit)})
   df = df[df['flag_rank'].notna()].sort_values(['Area', 'Item', 'Year', 'flag_rank'])
+
   #Invullen missende waarde met flag E en X en verwijderen van onnodige rijen
   #voorrang is als volgt A>E>X
-  def fill_group(group):
+  Values = [col for col in Values if col in df.columns]
+
+  results = []
+  for (area, item, year), group in df.groupby(['Area', 'Item', 'Year'], sort=False):
     base = group.iloc[0].copy()
     for col in Values:
       if pd.isna(base[col]):
         fallback = group[col].dropna()
         if not fallback.empty:
           base[col] = fallback.iloc[0]
-    return base
+    results.append(base)
 
-  clean_wereld = (
-    df.groupby(['Area', 'Item', 'Year'], group_keys=False)
-    .apply(fill_group)
-    .reset_index(drop=True)
-  )
   #weghalen flagkolom
+  clean_wereld = pd.DataFrame(results).reset_index(drop=True)
   clean_wereld = clean_wereld.drop(columns='flag_rank')
   return clean_wereld
 
