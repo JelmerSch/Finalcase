@@ -93,7 +93,7 @@ def Clean_wereld_pivot(FAO_Wereld_clean):
     .reset_index(drop=True)
   )
   #weghalen flagkolom
-  clean_wereld = clean_wereld.drop(colums='flag_rank')
+  clean_wereld = clean_wereld.drop(columns='flag_rank')
   return clean_wereld
 
 #### session status
