@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import plotly.express as px
 
 #### pagina indeling
 st.set_page_config(layout="centered")
@@ -62,12 +63,6 @@ def pivot_FAO(FAO_data):
   FAO_pivot['Unit_Yield Quantities'] = "t"
   return FAO_pivot
 
-#cache van rampen data
-@st.cache_data(show_spinner="Rampen laden")
-def load_Disasters(disasters_data):
-  Rampen = pd.read_csv(disasters_data, compression='zip')
-  return Rampen
-
 ####een clean versie van wereld waarbij missen de waarde zijn opgevuld voor figuren
 @st.cache_data(show_spinner="Clean wereld pivot")
 def Clean_wereld_pivot(FAO_Wereld_clean):
@@ -102,6 +97,21 @@ def Clean_wereld_pivot(FAO_Wereld_clean):
   clean_wereld = clean_wereld.drop(columns='flag_rank')
   return clean_wereld
 
+###cache van rampen data
+@st.cache_data(show_spinner="Rampen laden")
+def load_Disasters(disasters_data):
+  Rampen = pd.read_csv(disasters_data, compression='zip')
+  return Rampen
+
+###schone versie van rampen met alleen het nodige
+@st.cache_data(show_spinner="Rampen opschonen")
+def Clean_rampen(rampen_df):
+  df = rampen_df.copy()
+  df = df[df['Year'] >= 1961]
+  df = df[df['Disaster Type'].isin(['Drought', 'Flood'])]
+  df = df.reset_index(drop=True)
+  return df
+
 #### session status
 if "FAO_Wereld_data" not in st.session_state:
     st.session_state["FAO_Wereld_data"] = Wereld_FAO("FAOSTAT_wereld_data_en_4-17-2026.csv")
@@ -117,15 +127,18 @@ if "FAO_pivot_clean" not in st.session_state:
   st.session_state["FAO_pivot_clean"] = Clean_wereld_pivot(st.session_state["FAO_pivot"])
 if "Rampen" not in st.session_state:
     st.session_state["Rampen"] = load_Disasters("1900_2021_DISASTERS.xlsx - emdat data.csv.zip")
+if "rampen_clean" not in st.session_state:
+  st.session_state["Rampen_clean"] = Clean_rampen(st.session_state["Rampen"])
 
 #### Inladen data vanuit session state
-Fao_data = st.session_state["FAO_data"]
-Fao_pivot = st.session_state["FAO_pivot"]
-Fao_pivot_clean = st.session_state["FAO_pivot_clean"]
-Fao_wereld_data = st.session_state["FAO_Wereld_data"]
-Fao_wereld_pivot = st.session_state["FAO_Wereld_data_pivot"]
-Fao_wereld_pivot_clean = st.session_state["FAO_Wereld_pivot_clean"]
-rampen = st.session_state["Rampen"]
+Fao_data                = st.session_state["FAO_data"]
+Fao_pivot               = st.session_state["FAO_pivot"]
+Fao_pivot_clean         = st.session_state["FAO_pivot_clean"]
+Fao_wereld_data         = st.session_state["FAO_Wereld_data"]
+Fao_wereld_pivot        = st.session_state["FAO_Wereld_data_pivot"]
+Fao_wereld_pivot_clean  = st.session_state["FAO_Wereld_pivot_clean"]
+rampen                  = st.session_state["Rampen"]
+rampen_clean            = st.session_state["Rampen_clean"]
 
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
@@ -141,60 +154,84 @@ with Tab_1:
 #### TAB 2 Diepere analyse
 with Tab_2:
   st.write("Analyse")
-  st.write("Wereld productie van 3 soorten graan")
-  ##line chart hier
-  for graan in Granen_soorten:
-    df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World')
-    & (Fao_wereld_pivot_clean["Item"] == graan)].sort_values('Year')
 
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
+  with st.container(border=True):
+    st.write("Gemiddelde productie per land")
+    graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
+    df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
+      .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
+    df_kaart.columns = ['Area', 'Area Code (M49)', 'Gem_Productie']
+    df_kaart['Area_Code'] = pd.to.numeric(df_kaart['Area_code'], errors='coerce')
+    df_kaart = df_kaart.dropna(subset=['Area_Code'])
+    df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
+
+    fig_kaart = px.choropleth(df_kaart, locations='Area_Code', locationmode='ISO-3',
+                              color='Gem_Productie', hover_name='Area_Code',
+                              color_continuous_scale='y10rRd',
+                              labels={'Gem_Productie': 'Gem Productie (t)',},
+                              title=f'Gem Productie - {graan_kaart}')
+    fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
+                            thickness=15, len=0.75), geo=dict(showframe=False,
+                            showcoastlines=True), margin=dict(l=0, r=0, t=40, b=0))
+    st.plotly_chart(fig_kaart, use_container_width=True)
+
+  ##line chart hier
+  with st.container(border=True):
+   st.write("Wereld productie van 3 soorten graan")
+   graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
+   df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Aera'] == 'World') &
+                                     (Fao_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
+   fig = make_subplots(specs=[[{"secondary_y": True}]])
+   fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
                                name='Area harvested (ha)', line=dict(color='blue'),
                                mode='lines',), secondary_y=False)
-    fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
-                               name='Production (t)', line=dict(color='red'),
-                               mode='lines',), secondary_y=True)
-    fig.update_layout(title='Wereld productie graansoorten')
-    fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
-                       title_font=dict(color='blue'), tickfont=dict(color='blue'))
-    fig.update_yaxes(title_text='Production (t)', secondary_y=True,
-                       title_font=dict(color='red'), tickfont=dict(color='red'))
-    st.plotly_chart(fig, use_container_width=True)
+   fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
+                            name='Production (t)', line=dict(color='red'),
+                            mode='lines', ), secondary_y=True)
+   fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
+                     legend=dict(orientation='h'), yanchor='bottom', y=1.02,
+                     xanchor='right', x=1)
+   fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
+                    title_font=dict(color='blue'), tickfont=dict(color='blue'))
+   fig.update_yaxes(title_text='Production (t)', secondary_y=True,
+                    title_font=dict(color='red'), tickfont=dict(color='red'))
+   st.plotly_chart(fig, use_container_width=True)
 
-  st.divider()
-  st.write("Verdeling van productie van 3 soorten graan")
-  pie1, pie2, pie3 = st.columns(3)
-  for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
-    avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten))&
+  ## Pie Charts
+  with st.container(border=True):
+    st.write("Verdeling van productie van 3 soorten graan")
+    pie1, pie2, pie3 = st.columns(3)
+    for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
+      avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten))&
           (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')['Value_Production'].mean()
            .reindex(Continenten).fillna(0))
-    fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
-    fig_pie.update_layout(title=graan, showlegend=True)
-    with col:
-      st.plotly_chart(fig_pie, use_container_width=True)
+      fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
+      fig_pie.update_layout(title=graan, showlegend=True)
+      with col:
+        st.plotly_chart(fig_pie, use_container_width=True)
 
-  st.divider()
-  st.write("Productie en yield")
-  st.dataframe(Fao_data.head(1000))
-  st.divider()
-  st.write("Pivot van data")
-  st.dataframe(Fao_pivot.head(500))
-  st.divider()
-  st.write("Clean pivot van data")
-  st.dataframe(Fao_pivot_clean.head(500))
-  st.divider()
-  st.write("Wereld productie en yield")
-  st.dataframe(Fao_wereld_data.head(1000))
-  st.divider()
-  st.write("Wereld pivot van data")
-  st.dataframe(Fao_wereld_pivot.head(500))
-  st.divider()
-  st.write("Wereld clean pivot van data")
-  st.dataframe(Fao_wereld_pivot_clean.head(500))
-  st.divider()
-  st.write("Rampen")
-  st.dataframe(rampen.head(1000))
-  
+  ##rampen op een kaart
+  with st.container(border=True):
+    st.write("Overstromingen en droogtes per land")
+    df_ramp_totaal = (rampen_clean.goupby(['Country', 'ISO'], as_index=False)['Disaster Type']
+                      .count().rename(columns={'Disaster Type': 'Aantal'}))
+    fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
+                             color='Aantal', hover_name='Country', color_continuous_scale='Blues',
+                             labels={'Aantal': 'Aantal rampen'},
+                             title='Overstromingen en Droogtes in de wereld')
+    fig_ramp.update_layout(coloraxis_colorbar=dict(title='Aantal rampen', thickness=15, len=0.75),
+                           geo=dict(showframe=False, showcoastlines=True),
+                           margin=dict(l=0, r=0, t=40, b=0))
+    st.plotly_chart(fig_ramp, use_container_width=True)
+
+    ##Tijdlijn van type ramp en jaar
+    df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
+    fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
+                      color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
+                      labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
+                      title='Verdeling overstromingen en droogtes in de wereld')
+    st.plotly_chart(fig_tijd, use_container_width=True)
+
 #### TAB 3 Resultaten en conclusie
 with Tab_3:
   st.write("Resultaten")
