@@ -6,6 +6,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 
+st.cache_data.clear()
+st.cache_resource.clear()
+
 #### pagina indeling
 st.set_page_config(layout="centered")
 
@@ -152,10 +155,6 @@ Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
   st.write("Start")
-  if st.button("Clear cache"):
-    st.cache_data.clear()
-    st.cache_resource.clear()
-    st.success("Cache is geleegd!")
 
 #### TAB 2 Diepere analyse
 with Tab_2:
