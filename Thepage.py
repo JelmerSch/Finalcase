@@ -161,7 +161,7 @@ with Tab_2:
     df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
       .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
     df_kaart.columns = ['Area', 'Area Code (M49)', 'Gem_Productie']
-    df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_code'], errors='coerce')
+    df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
     df_kaart = df_kaart.dropna(subset=['Area_Code'])
     df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
 
