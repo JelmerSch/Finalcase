@@ -160,16 +160,16 @@ with Tab_2:
     graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
     df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
       .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
-    df_kaart.columns = ['Area', 'Area Code (M49)', 'Gem_Productie']
-    df_kaart['Area_Code'] = pd.to.numeric(df_kaart['Area_code'], errors='coerce')
+    df_kaart.columns = ['Area', 'Area Code', 'Gem_Productie']
+    df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
     df_kaart = df_kaart.dropna(subset=['Area_Code'])
     df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
 
-    fig_kaart = px.choropleth(df_kaart, locations='Area_Code', locationmode='ISO-3',
-                              color='Gem_Productie', hover_name='Area_Code',
+    fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
+                              color='Gem_Productie', hover_name='Area',
                               color_continuous_scale='y10rRd',
-                              labels={'Gem_Productie': 'Gem Productie (t)',},
-                              title=f'Gem Productie - {graan_kaart}')
+                              labels={'Gem_Productie': 'Gem Productie (t)'},
+                              title=f'Gemiddelde Productie - {graan_kaart}')
     fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
                             thickness=15, len=0.75), geo=dict(showframe=False,
                             showcoastlines=True), margin=dict(l=0, r=0, t=40, b=0))
@@ -224,7 +224,7 @@ with Tab_2:
                            margin=dict(l=0, r=0, t=40, b=0))
     st.plotly_chart(fig_ramp, use_container_width=True)
 
-    ##Tijdlijn van type ramp en jaar
+    ##Tijdlijn van type rampen en jaar
     df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
     fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
                       color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
