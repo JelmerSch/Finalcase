@@ -122,6 +122,8 @@ Fao_wereld_pivot = st.session_state["FAO_Wereld_data_pivot"]
 Fao_wereld_pivot_clean = st.session_state["FAO_Wereld_pivot_clean"]
 rampen = st.session_state["Rampen"]
 
+st.write(Fao_wereld_pivot_clean.columns.tolist())
+st.write(Fao_wereld_pivot_clean.head(3))
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
