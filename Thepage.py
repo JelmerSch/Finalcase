@@ -154,6 +154,7 @@ with Tab_1:
 #### TAB 2 Diepere analyse
 with Tab_2:
   st.write("Analyse")
+  st.write(Fao_pivot_clean.columns.tolist())
 
   with st.container(border=True):
     st.write("Gemiddelde productie per land")
