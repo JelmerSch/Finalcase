@@ -157,7 +157,6 @@ Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
 with Tab_1:
   st.write("Start")
   ### debugging
-  st.sidebar.markdown("---")
   if st.sidebar.button("🔄 Cache wissen & herladen"):
     st.cache_data.clear()
     st.rerun()
