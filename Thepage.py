@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 import folium
-from folium.plugins import LayerControl
+from folium import LayerControl
 import branca.colormap as cm
 from streamlit_folium import st_folium
 
