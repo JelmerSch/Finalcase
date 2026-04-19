@@ -1,10 +1,13 @@
 #### Imports
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
+import folium
+from folium.plugins import LayerControl
+import branca.colormap as cm
+from streamlit_folium import st_folium
 
 #### pagina indeling
 st.set_page_config(layout="centered")
@@ -140,11 +143,167 @@ Fao_wereld_pivot_clean  = st.session_state["FAO_Wereld_pivot_clean"]
 rampen                  = st.session_state["Rampen"]
 rampen_clean            = st.session_state["Rampen_clean"]
 
+#### Folium kaart voor analyse
+@st.cache_data(show_spinner="Folium kaart bouwen")
+def build_folium_map(fao_pivot_clean, rampen_clean):
+    """Bouw een Folium kaart met lagen voor Rye, Flax, Wheat, Overstromingen en Droogtes."""
+
+    # --- Productie data per graansoort voorbereiden ---
+    graan_data = {}
+    for graan in ['Rye', 'Flax, raw or retted', 'Wheat']:
+        df = (fao_pivot_clean[fao_pivot_clean['Item'] == graan]
+              .groupby(['Area'], as_index=False)['Value_Production'].mean())
+        df.columns = ['Area', 'Gem_Productie']
+        graan_data[graan] = df
+
+    # --- Rampen data voorbereiden ---
+    df_flood = (rampen_clean[rampen_clean['Disaster Type'] == 'Flood']
+                .groupby(['Country', 'ISO'], as_index=False).size()
+                .rename(columns={'size': 'Aantal'}))
+    df_drought = (rampen_clean[rampen_clean['Disaster Type'] == 'Drought']
+                  .groupby(['Country', 'ISO'], as_index=False).size()
+                  .rename(columns={'size': 'Aantal'}))
+
+    # --- GeoJSON URL voor landen grenzen ---
+    geojson_url = "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/world-countries.json"
+
+    # --- Kaart aanmaken ---
+    m = folium.Map(location=[20, 0], zoom_start=2, tiles="CartoDB positron")
+
+    # --- Kleurenschalen voor granen ---
+    graan_kleuren = {
+        'Rye':              ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026'],
+        'Flax, raw or retted': ['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#005a32'],
+        'Wheat':            ['#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#7f2704'],
+    }
+
+    for graan, df_g in graan_data.items():
+        if df_g.empty:
+            continue
+
+        max_val = df_g['Gem_Productie'].max()
+        min_val = df_g['Gem_Productie'].min()
+        if max_val == min_val:
+            max_val = min_val + 1
+
+        colormap = cm.LinearColormap(
+            colors=graan_kleuren[graan],
+            vmin=min_val,
+            vmax=max_val,
+            caption=f'Gem. Productie {graan} (t)'
+        )
+
+        productie_dict = dict(zip(df_g['Area'], df_g['Gem_Productie']))
+
+        def style_graan(feature, pd=productie_dict, cmap=colormap):
+            naam = feature['properties'].get('name', '')
+            val = pd.get(naam, None)
+            if val is None or pd.isna(val):
+                return {'fillColor': '#d3d3d3', 'color': '#555', 'weight': 0.5,
+                        'fillOpacity': 0.4}
+            return {'fillColor': cmap(val), 'color': '#555', 'weight': 0.5,
+                    'fillOpacity': 0.75}
+
+        layer = folium.GeoJson(
+            geojson_url,
+            name=f'Productie: {graan}',
+            style_function=style_graan,
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['Land:'],
+                localize=True
+            ),
+            show=graan == 'Wheat'  # Wheat standaard zichtbaar
+        )
+        layer.add_to(m)
+        colormap.add_to(m)
+
+    # --- Overstromingen laag ---
+    if not df_flood.empty:
+        max_flood = df_flood['Aantal'].max()
+        min_flood = df_flood['Aantal'].min()
+        if max_flood == min_flood:
+            max_flood = min_flood + 1
+
+        colormap_flood = cm.LinearColormap(
+            colors=['#deebf7', '#9ecae1', '#4292c6', '#08519c', '#08306b'],
+            vmin=min_flood,
+            vmax=max_flood,
+            caption='Aantal Overstromingen'
+        )
+
+        flood_dict = dict(zip(df_flood['Country'], df_flood['Aantal']))
+
+        def style_flood(feature, fd=flood_dict, cmap=colormap_flood):
+            naam = feature['properties'].get('name', '')
+            val = fd.get(naam, None)
+            if val is None:
+                return {'fillColor': '#d3d3d3', 'color': '#555', 'weight': 0.5,
+                        'fillOpacity': 0.3}
+            return {'fillColor': cmap(val), 'color': '#336699', 'weight': 0.7,
+                    'fillOpacity': 0.75}
+
+        flood_layer = folium.GeoJson(
+            geojson_url,
+            name='Overstromingen',
+            style_function=style_flood,
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['Land:'],
+                localize=True
+            ),
+            show=False
+        )
+        flood_layer.add_to(m)
+        colormap_flood.add_to(m)
+
+    # --- Droogtes laag ---
+    if not df_drought.empty:
+        max_drought = df_drought['Aantal'].max()
+        min_drought = df_drought['Aantal'].min()
+        if max_drought == min_drought:
+            max_drought = min_drought + 1
+
+        colormap_drought = cm.LinearColormap(
+            colors=['#fff7bc', '#fee391', '#fec44f', '#fe9929', '#d95f0e', '#993404'],
+            vmin=min_drought,
+            vmax=max_drought,
+            caption='Aantal Droogtes'
+        )
+
+        drought_dict = dict(zip(df_drought['Country'], df_drought['Aantal']))
+
+        def style_drought(feature, dd=drought_dict, cmap=colormap_drought):
+            naam = feature['properties'].get('name', '')
+            val = dd.get(naam, None)
+            if val is None:
+                return {'fillColor': '#d3d3d3', 'color': '#555', 'weight': 0.5,
+                        'fillOpacity': 0.3}
+            return {'fillColor': cmap(val), 'color': '#8B4513', 'weight': 0.7,
+                    'fillOpacity': 0.75}
+
+        drought_layer = folium.GeoJson(
+            geojson_url,
+            name='Droogtes',
+            style_function=style_drought,
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['Land:'],
+                localize=True
+            ),
+            show=False
+        )
+        drought_layer.add_to(m)
+        colormap_drought.add_to(m)
+
+    # --- Layer Control toevoegen ---
+    LayerControl(collapsed=False).add_to(m)
+
+    return m
+
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
-
-
 
 #### Begin TAB
 Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
@@ -156,84 +315,56 @@ with Tab_1:
 #### TAB 2 Diepere analyse
 with Tab_2:
   st.write("Analyse")
-  st.write(Fao_pivot_clean.columns.tolist())
+  # --- Folium kaart: Productie per land + Rampen ---
+  st.subheader("Gemiddelde productie per land & rampen")
+  st.caption("Gebruik het laagmenu rechts op de kaart om te wisselen tussen graansoorten, overstromingen en droogtes.")
 
-  with st.container(border=True):
-    st.write("Gemiddelde productie per land")
-    graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
-    df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
-      .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
-    df_kaart.columns = ['Area', 'Area_Code', 'Gem_Productie']
-    df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
-    df_kaart = df_kaart.dropna(subset=['Area_Code'])
-    df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
+  folium_kaart = build_folium_map(Fao_pivot_clean, rampen_clean)
+  st_folium(folium_kaart, use_container_width=True, height=500)
 
-    fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
-                              color='Gem_Productie', hover_name='Area',
-                              color_continuous_scale='YlOrRd',
-                              labels={'Gem_Productie': 'Gem Productie (t)'},
-                              title=f'Gemiddelde Productie - {graan_kaart}')
-    fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
-                            thickness=15, len=0.75), geo=dict(showframe=False,
-                            showcoastlines=True), margin=dict(l=0, r=0, t=40, b=0))
-    st.plotly_chart(fig_kaart, use_container_width=True)
-
+  st.divider()
   ##line chart hier
-  with st.container(border=True):
-   st.write("Wereld productie van 3 soorten graan")
-   graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
-   df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
-                                     (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
-   fig = make_subplots(specs=[[{"secondary_y": True}]])
-   fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
-                               name='Area harvested (ha)', line=dict(color='blue'),
-                               mode='lines',), secondary_y=False)
-   fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
-                            name='Production (t)', line=dict(color='red'),
-                            mode='lines', ), secondary_y=True)
-   fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
-                     legend=dict(orientation='h', yanchor='bottom', y=1.02,
-                     xanchor='right', x=1))
-   fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
-                    title_font=dict(color='blue'), tickfont=dict(color='blue'))
-   fig.update_yaxes(title_text='Production (t)', secondary_y=True,
-                    title_font=dict(color='red'), tickfont=dict(color='red'))
-   st.plotly_chart(fig, use_container_width=True)
+  st.subheader("Wereld productie van 3 soorten graan")
+  graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
+  df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
+                                    (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
+  fig = make_subplots(specs=[[{"secondary_y": True}]])
+  fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
+                              name='Area harvested (ha)', line=dict(color='blue'),
+                              mode='lines',), secondary_y=False)
+  fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
+                           name='Production (t)', line=dict(color='red'),
+                           mode='lines', ), secondary_y=True)
+  fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
+                    legend=dict(orientation='h', yanchor='bottom', y=1.02,
+                    xanchor='right', x=1))
+  fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
+                   title_font=dict(color='blue'), tickfont=dict(color='blue'))
+  fig.update_yaxes(title_text='Production (t)', secondary_y=True,
+                   title_font=dict(color='red'), tickfont=dict(color='red'))
+  st.plotly_chart(fig, use_container_width=True)
+  st.divider()
 
   ## Pie Charts
-  with st.container(border=True):
-    st.write("Verdeling van productie van 3 soorten graan")
-    pie1, pie2, pie3 = st.columns(3)
-    for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
-      avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten))&
-          (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')['Value_Production'].mean()
-           .reindex(Continenten).fillna(0))
-      fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
-      fig_pie.update_layout(title=graan, showlegend=True)
-      with col:
-        st.plotly_chart(fig_pie, use_container_width=True)
+  st.subheader("Verdeling van productie van 3 soorten graan")
+  pie1, pie2, pie3 = st.columns(3)
+  for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
+     avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten))&
+         (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')['Value_Production'].mean()
+          .reindex(Continenten).fillna(0))
+     fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
+     fig_pie.update_layout(title=graan, showlegend=True)
+     with col:
+       st.plotly_chart(fig_pie, use_container_width=True)
 
-  ##rampen op een kaart
-  with st.container(border=True):
-    st.write("Overstromingen en droogtes per land")
-    df_ramp_totaal = (rampen_clean.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
-                      .count().rename(columns={'Disaster Type': 'Aantal'}))
-    fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
-                             color='Aantal', hover_name='Country', color_continuous_scale='Blues',
-                             labels={'Aantal': 'Aantal rampen'},
-                             title='Overstromingen en Droogtes in de wereld')
-    fig_ramp.update_layout(coloraxis_colorbar=dict(title='Aantal rampen', thickness=15, len=0.75),
-                           geo=dict(showframe=False, showcoastlines=True),
-                           margin=dict(l=0, r=0, t=40, b=0))
-    st.plotly_chart(fig_ramp, use_container_width=True)
-
-    ##Tijdlijn van type rampen en jaar
-    df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
-    fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
+  ##Tijdlijn van type rampen en jaar
+  st.subheader("Verdeling overstromingen en droogtes in de wereld")
+  df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
+  fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
                       color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
                       labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
                       title='Verdeling overstromingen en droogtes in de wereld')
-    st.plotly_chart(fig_tijd, use_container_width=True)
+  st.plotly_chart(fig_tijd, use_container_width=True)
 
 #### TAB 3 Resultaten en conclusie
 with Tab_3:
