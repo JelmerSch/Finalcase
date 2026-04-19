@@ -143,24 +143,28 @@ Fao_wereld_pivot_clean  = st.session_state["FAO_Wereld_pivot_clean"]
 rampen                  = st.session_state["Rampen"]
 rampen_clean            = st.session_state["Rampen_clean"]
 
-#### Folium kaart voor analyse
-@st.cache_data(show_spinner="Folium kaart bouwen")
-def build_folium_map(fao_pivot_clean, rampen_clean):
+### voor figuren
+Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
+Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
+
+
+@st.cache_resource(show_spinner="Folium kaart bouwen")
+def build_folium_map(_fao_pivot_clean, _rampen_clean):
     """Bouw een Folium kaart met lagen voor Rye, Flax, Wheat, Overstromingen en Droogtes."""
 
     # --- Productie data per graansoort voorbereiden ---
     graan_data = {}
     for graan in ['Rye', 'Flax, raw or retted', 'Wheat']:
-        df = (fao_pivot_clean[fao_pivot_clean['Item'] == graan]
+        df = (_fao_pivot_clean[_fao_pivot_clean['Item'] == graan]
               .groupby(['Area'], as_index=False)['Value_Production'].mean())
         df.columns = ['Area', 'Gem_Productie']
         graan_data[graan] = df
 
     # --- Rampen data voorbereiden ---
-    df_flood = (rampen_clean[rampen_clean['Disaster Type'] == 'Flood']
+    df_flood = (_rampen_clean[_rampen_clean['Disaster Type'] == 'Flood']
                 .groupby(['Country', 'ISO'], as_index=False).size()
                 .rename(columns={'size': 'Aantal'}))
-    df_drought = (rampen_clean[rampen_clean['Disaster Type'] == 'Drought']
+    df_drought = (_rampen_clean[_rampen_clean['Disaster Type'] == 'Drought']
                   .groupby(['Country', 'ISO'], as_index=False).size()
                   .rename(columns={'size': 'Aantal'}))
 
@@ -301,9 +305,6 @@ def build_folium_map(fao_pivot_clean, rampen_clean):
 
     return m
 
-### voor figuren
-Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
-Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
 
 #### Begin TAB
 Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
@@ -315,6 +316,7 @@ with Tab_1:
 #### TAB 2 Diepere analyse
 with Tab_2:
   st.write("Analyse")
+
   # --- Folium kaart: Productie per land + Rampen ---
   st.subheader("Gemiddelde productie per land & rampen")
   st.caption("Gebruik het laagmenu rechts op de kaart om te wisselen tussen graansoorten, overstromingen en droogtes.")
@@ -323,7 +325,8 @@ with Tab_2:
   st_folium(folium_kaart, use_container_width=True, height=500)
 
   st.divider()
-  ##line chart hier
+
+  # --- Line chart ---
   st.subheader("Wereld productie van 3 soorten graan")
   graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
   df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
@@ -343,32 +346,35 @@ with Tab_2:
   fig.update_yaxes(title_text='Production (t)', secondary_y=True,
                    title_font=dict(color='red'), tickfont=dict(color='red'))
   st.plotly_chart(fig, use_container_width=True)
+
   st.divider()
 
-  ## Pie Charts
+  # --- Pie Charts ---
   st.subheader("Verdeling van productie van 3 soorten graan")
   pie1, pie2, pie3 = st.columns(3)
   for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
-     avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten))&
-         (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')['Value_Production'].mean()
-          .reindex(Continenten).fillna(0))
-     fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
-     fig_pie.update_layout(title=graan, showlegend=True)
-     with col:
-       st.plotly_chart(fig_pie, use_container_width=True)
+    avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten)) &
+        (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')['Value_Production'].mean()
+           .reindex(Continenten).fillna(0))
+    fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
+    fig_pie.update_layout(title=graan, showlegend=True)
+    with col:
+      st.plotly_chart(fig_pie, use_container_width=True)
 
-  ##Tijdlijn van type rampen en jaar
+  st.divider()
+
+  # --- Tijdlijn rampen ---
   st.subheader("Verdeling overstromingen en droogtes in de wereld")
   df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
   fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
-                      color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
-                      labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
-                      title='Verdeling overstromingen en droogtes in de wereld')
+                    color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
+                    labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
+                    title='Verdeling overstromingen en droogtes in de wereld')
   st.plotly_chart(fig_tijd, use_container_width=True)
 
 #### TAB 3 Resultaten en conclusie
 with Tab_3:
   st.write("Resultaten")
 
-  
+
 #### Einde script
