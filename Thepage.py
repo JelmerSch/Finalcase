@@ -195,10 +195,10 @@ def build_folium_map(fao_pivot_clean, rampen_clean):
 
         productie_dict = dict(zip(df_g['Area'], df_g['Gem_Productie']))
 
-        def style_graan(feature, pd=productie_dict, cmap=colormap):
+        def style_graan(feature, pdict=productie_dict, cmap=colormap):
             naam = feature['properties'].get('name', '')
-            val = pd.get(naam, None)
-            if val is None or pd.isna(val):
+            val = pdict.get(naam, None)
+            if val is None or (isinstance(val, float) and val != val):
                 return {'fillColor': '#d3d3d3', 'color': '#555', 'weight': 0.5,
                         'fillOpacity': 0.4}
             return {'fillColor': cmap(val), 'color': '#555', 'weight': 0.5,
