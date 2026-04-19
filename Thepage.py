@@ -152,7 +152,7 @@ Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
 
 #### Begin TAB
-Tab_1, Tab_2, Tab_3 = st.tabs(["Hoofdpagina", "Analyse", "Resultaat"])
+Tab_1, Tab_2, Tab_3, Tab_4 = st.tabs(["Hoofdpagina", "Granen Analyse", "Rampen Analyse", "Resultaat"])
 
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
@@ -163,11 +163,9 @@ with Tab_1:
                  "afstand. op deze manier is te zien of hij lange teksten op een "
                  "juiste manier afhakt")
 
-#### TAB 2 Diepere analyse
+#### TAB 2 granen analyse
 with Tab_2:
-    st.write("Analyse")
-    st.write(Fao_pivot_clean.columns.tolist())
-
+    st.write("Granen Analyse")
     with st.container(border=True):
         st.write("Gemiddelde productie per land")
         graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
@@ -225,20 +223,43 @@ with Tab_2:
             with col:
                 st.plotly_chart(fig_pie, use_container_width=True)
 
-    ##rampen op een kaart
+#### TAB 3 rampen analyse
+with Tab_3:
+    st.write("Rampen Analyse")
     with st.container(border=True):
         st.write("Overstromingen en droogtes per land")
-        df_ramp_totaal = (rampen_clean.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
+        ##rampen op een kaart
+        ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
+                                  options=["Floods and Droughts","Floods", "Droughts"])
+        #Kleuren schalen voor rampen op kaart
+        Kleur_ramp = {"Floods and Droughts": {"filter": ["Flood", "Drought"],
+                                              "schaal": "Purples",
+                                              "label": "Aantal rampen",
+                                              "titel": "Overstromingen en Droogtes in de wereld"},
+                      "Floods": {"filter":   ["Flood"],
+                                 "schaal":   "Blues",
+                                 "label":    "Aantal overstromingen",
+                                 "titel":    "Overstromingen in de wereld"},
+                      "Droughts": {"filter":   ["Drought"],
+                                   "schaal":   [[0.0, "#ffffb2"], [0.2, "#fecc5c"], [0.4, "#fd8d3c"],
+                                                [0.6, "#f03b20"], [0.8, "#bd0026"], [1.0, "#67000d"]],
+                                   "label":    "Aantal droogtes",
+                                   "titel":    "Droogtes in de wereld",}}
+        Kleur = Kleur_ramp[ramp_keuze]
+        df_ramp_gefilterd = rampen_clean[rampen_clean['Disaster Type'].isin(Kleur["filter"])]
+        df_ramp_totaal = (df_ramp_gefilterd.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
                           .count().rename(columns={'Disaster Type': 'Aantal'}))
         fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
-                                 color='Aantal', hover_name='Country', color_continuous_scale='Blues',
-                                 labels={'Aantal': 'Aantal rampen'},
-                                 title='Overstromingen en Droogtes in de wereld')
-        fig_ramp.update_layout(coloraxis_colorbar=dict(title='Aantal rampen', thickness=15, len=0.75),
+                                 color='Aantal', hover_name='Country', color_continuous_scale=Kleur['schaal'],
+                                 labels={'Aantal': Kleur['Label']},
+                                 title=Kleur['titel'])
+        fig_ramp.update_layout(coloraxis_colorbar=dict(title=Kleur['label'], thickness=15, len=0.75),
                                geo=dict(showframe=False, showcoastlines=True),
                                margin=dict(l=0, r=0, t=40, b=0))
         st.plotly_chart(fig_ramp, use_container_width=True)
 
+    with st.container(border=True):
+        st.write("Verdeling overstromingen en droogtes in de wereld")
         ##Tijdlijn van type rampen en jaar
         df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
         fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
@@ -247,8 +268,8 @@ with Tab_2:
                           title='Verdeling overstromingen en droogtes in de wereld')
         st.plotly_chart(fig_tijd, use_container_width=True)
 
-#### TAB 3 Resultaten en conclusie
-with Tab_3:
+#### TAB 4 Resultaten en conclusie
+with Tab_4:
     cen2 = st.columns([1, 2, 1])[1]
     with cen2:
         st.write("Resultaten")
