@@ -204,9 +204,9 @@ with Tab_2:
                           legend=dict(orientation='h', yanchor='bottom', y=1.02,
                                       xanchor='right', x=1))
         fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
-                         title_font=dict(color='blue'), tickfont=dict(color='blue'))
+                         title_font=dict(color='blue'), tickfont=dict(color='blue'), rangemode='tozero')
         fig.update_yaxes(title_text='Production (t)', secondary_y=True,
-                         title_font=dict(color='red'), tickfont=dict(color='red'))
+                         title_font=dict(color='red'), tickfont=dict(color='red'), rangemode='tozero')
         st.plotly_chart(fig, use_container_width=True)
 
     ## Pie Charts
