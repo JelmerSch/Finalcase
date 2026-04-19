@@ -204,9 +204,9 @@ with Tab_2:
                           legend=dict(orientation='h', yanchor='bottom', y=1.02,
                                       xanchor='right', x=1))
         fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
-                         title_font=dict(color='blue'), tickfont=dict(color='blue'))
+                         title_font=dict(color='blue'), tickfont=dict(color='blue'), rangemode='tozero')
         fig.update_yaxes(title_text='Production (t)', secondary_y=True,
-                         title_font=dict(color='red'), tickfont=dict(color='red'))
+                         title_font=dict(color='red'), tickfont=dict(color='red'), rangemode='tozero')
         st.plotly_chart(fig, use_container_width=True)
 
     ## Pie Charts
@@ -251,7 +251,7 @@ with Tab_3:
                           .count().rename(columns={'Disaster Type': 'Aantal'}))
         fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
                                  color='Aantal', hover_name='Country', color_continuous_scale=Kleur['schaal'],
-                                 labels={'Aantal': Kleur['Label']},
+                                 labels={'Aantal': Kleur['label']},
                                  title=Kleur['titel'])
         fig_ramp.update_layout(coloraxis_colorbar=dict(title=Kleur['label'], thickness=15, len=0.75),
                                geo=dict(showframe=False, showcoastlines=True),
