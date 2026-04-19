@@ -251,7 +251,7 @@ with Tab_3:
                           .count().rename(columns={'Disaster Type': 'Aantal'}))
         fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
                                  color='Aantal', hover_name='Country', color_continuous_scale=Kleur['schaal'],
-                                 labels={'Aantal': Kleur['Label']},
+                                 labels={'Aantal': Kleur['label']},
                                  title=Kleur['titel'])
         fig_ramp.update_layout(coloraxis_colorbar=dict(title=Kleur['label'], thickness=15, len=0.75),
                                geo=dict(showframe=False, showcoastlines=True),
