@@ -204,150 +204,154 @@ with Tab_1:
 
 #### TAB 2 granen analyse
 with Tab_2:
-    with st.container(border=True):
-        ###tekst in container
-        st.title("Gemiddelde productie graan per land")
-        st.write("""Hieronder is een wereld kaart waarin de gemiddelde productie van de verschillende soorten graan in 
-        tonnen te zien is. Dit is op een kleurenschaal gezet om een duidelijk verschil te zien tussen de 
-        landen. De witte stukken betekend dat er geen data beschikbaar is van deze landen wat betekend dat 
-        het graan soort daar niet wordt geproduceerd.""")
+    ana1 = st.columns([0.5, 2, 0.5])[1]
+    with ana1:
+        with st.container(border=True):
+            ###tekst in container
+            st.title("Gemiddelde productie graan per land")
+            st.write("""Hieronder is een wereld kaart waarin de gemiddelde productie van de verschillende soorten graan in 
+            tonnen te zien is. Dit is op een kleurenschaal gezet om een duidelijk verschil te zien tussen de 
+            landen. De witte stukken betekend dat er geen data beschikbaar is van deze landen wat betekend dat 
+            het graan soort daar niet wordt geproduceerd.""")
 
-        graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
-        df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
-                    .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
-        df_kaart.columns = ['Area', 'Area_Code', 'Gem_Productie']
-        df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
-        df_kaart = df_kaart.dropna(subset=['Area_Code'])
-        df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
+            graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
+            df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
+                        .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
+            df_kaart.columns = ['Area', 'Area_Code', 'Gem_Productie']
+            df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
+            df_kaart = df_kaart.dropna(subset=['Area_Code'])
+            df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
 
-        fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
-                                  color='Gem_Productie', hover_name='Area',
-                                  color_continuous_scale='YlOrRd',
-                                  labels={'Gem_Productie': 'Gem Productie (t)'},
-                                  title=f'Gemiddelde Productie - {graan_kaart}')
-        fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
-                                                        thickness=15, len=0.75), geo=dict(showframe=False,
-                                                        showcoastlines=True),margin=dict(l=0, r=0, t=40, b=0))
-        st.plotly_chart(fig_kaart, use_container_width=True)
-        ###tekst in container na figuur
-        st.subheader("Rye")
-        st.write("""Zoals te zien is wordt er veel rye geproduceerd in Europa voornamelijk in Duitsland, Polen en Rusland. 
-        Er wordt vrijwel niks geproduceerd in Africa en nauwelijks iets in Oceanië, Azië en Noord- of Zuid Amerika.""")
+            fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
+                                    color='Gem_Productie', hover_name='Area',
+                                    color_continuous_scale='YlOrRd',
+                                    labels={'Gem_Productie': 'Gem Productie (t)'},
+                                    title=f'Gemiddelde Productie - {graan_kaart}')
+            fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
+                                                            thickness=15, len=0.75), geo=dict(showframe=False,
+                                                            showcoastlines=True),margin=dict(l=0, r=0, t=40, b=0))
+            st.plotly_chart(fig_kaart, use_container_width=True)
+            ###tekst in container na figuur
+            st.subheader("Rye")
+            st.write("""Zoals te zien is wordt er veel rye geproduceerd in Europa voornamelijk in Duitsland, Polen en Rusland. 
+            Er wordt vrijwel niks geproduceerd in Africa en nauwelijks iets in Oceanië, Azië en Noord- of Zuid Amerika.""")
 
-        st.subheader("Flax")
-        st.write("""Zoals te zien is op de kaart is de productie van flax in Europa het grootst en de grootste producenten 
-        zijn Rusland en Frankrijk. Er zijn weinig landen buiten Europa die het überhaupt produceren. China is 
-        het enige land buiten Europa die het in significante hoeveelheid produceert.""")
+            st.subheader("Flax")
+            st.write("""Zoals te zien is op de kaart is de productie van flax in Europa het grootst en de grootste producenten 
+            zijn Rusland en Frankrijk. Er zijn weinig landen buiten Europa die het überhaupt produceren. China is 
+            het enige land buiten Europa die het in significante hoeveelheid produceert.""")
 
-        st.subheader("Wheat")
-        st.write("""Zoals te zien is op de kaart wordt wheat overal in de wereld geproduceerd. De grootste producenten 
-        van wheat zijn China, India, US en Rusland. Er is duidelijk te zien dat de verdeling van de productie 
-        van wheat veel meer verdeeld is over de wereld heen en dat het geproduceerd wordt op elk continent.""")
+            st.subheader("Wheat")
+            st.write("""Zoals te zien is op de kaart wordt wheat overal in de wereld geproduceerd. De grootste producenten 
+            van wheat zijn China, India, US en Rusland. Er is duidelijk te zien dat de verdeling van de productie 
+            van wheat veel meer verdeeld is over de wereld heen en dat het geproduceerd wordt op elk continent.""")
 
-    ##line chart hier
-    with st.container(border=True):
-        ###tekst in container voor figuur
-        st.header("Wereld productie van 3 soorten graan")
-        st.write("""Hieronder is de wereld productie te zien van de verschillende soorten graan en hoe groot het gebied 
-        is waarop het geoogst is. Om de twee waardes tegelijk te zien zijn twee y-assen gebruikt en in 
-        verschillende kleuren gezet om een duidelijk contrast tussen de twee te hebben.""")
+        ##line chart hier
+        with st.container(border=True):
+            ###tekst in container voor figuur
+            st.header("Wereld productie van 3 soorten graan")
+            st.write("""Hieronder is de wereld productie te zien van de verschillende soorten graan en hoe groot het gebied 
+            is waarop het geoogst is. Om de twee waardes tegelijk te zien zijn twee y-assen gebruikt en in 
+            verschillende kleuren gezet om een duidelijk contrast tussen de twee te hebben.""")
 
-        graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
-        df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
-                                          (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
-                                 name='Area harvested (ha)', line=dict(color='blue'),
-                                 mode='lines', ), secondary_y=False)
-        fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
-                                 name='Production (t)', line=dict(color='red'),
-                                 mode='lines', ), secondary_y=True)
-        fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
-                          legend=dict(orientation='h', yanchor='bottom', y=1.02,
-                                      xanchor='right', x=1))
-        fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
-                         title_font=dict(color='blue'), tickfont=dict(color='blue'), rangemode='tozero')
-        fig.update_yaxes(title_text='Production (t)', secondary_y=True,
-                         title_font=dict(color='red'), tickfont=dict(color='red'), rangemode='tozero')
-        st.plotly_chart(fig, use_container_width=True)
+            graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
+            df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
+                                            (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+            fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
+                                    name='Area harvested (ha)', line=dict(color='blue'),
+                                    mode='lines', ), secondary_y=False)
+            fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Production'],
+                                    name='Production (t)', line=dict(color='red'),
+                                    mode='lines', ), secondary_y=True)
+            fig.update_layout(title=f'Wereld productie - {graan_lijn}', xaxis_title='Year',
+                            legend=dict(orientation='h', yanchor='bottom', y=1.02,
+                                        xanchor='right', x=1))
+            fig.update_yaxes(title_text='Area harvested (ha)', secondary_y=False,
+                            title_font=dict(color='blue'), tickfont=dict(color='blue'), rangemode='tozero')
+            fig.update_yaxes(title_text='Production (t)', secondary_y=True,
+                            title_font=dict(color='red'), tickfont=dict(color='red'), rangemode='tozero')
+            st.plotly_chart(fig, use_container_width=True)
 
-    ## Pie Charts
-    with st.container(border=True):
-        ###tekst in container voor figuur
-        st.header("Verdeling van productie van 3 soorten graan")
-        st.write("""Hieronder kan je zien de verdeling van de productie van de 3 soorten graan per continent. Dit geeft 
-        een duidelijk beeld welk type graan waar voornamelijk wordt geproduceerd in de wereld.""")
+        ## Pie Charts
+        with st.container(border=True):
+            ###tekst in container voor figuur
+            st.header("Verdeling van productie van 3 soorten graan")
+            st.write("""Hieronder kan je zien de verdeling van de productie van de 3 soorten graan per continent. Dit geeft 
+            een duidelijk beeld welk type graan waar voornamelijk wordt geproduceerd in de wereld.""")
 
-        pie1, pie2, pie3 = st.columns(3)
-        for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
-            avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten)) &
-                                          (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')[
-                       'Value_Production'].mean()
-                   .reindex(Continenten).fillna(0))
-            fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
-            fig_pie.update_layout(title=graan, showlegend=True)
-            with col:
-                st.plotly_chart(fig_pie, use_container_width=True)
+            pie1, pie2, pie3 = st.columns(3)
+            for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
+                avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten)) &
+                                            (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')[
+                        'Value_Production'].mean()
+                    .reindex(Continenten).fillna(0))
+                fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
+                fig_pie.update_layout(title=graan, showlegend=True)
+                with col:
+                    st.plotly_chart(fig_pie, use_container_width=True)
 
 #### TAB 3 rampen analyse
 with Tab_3:
-    with st.container(border=True):
-        ###tekst in container voor figuur
-        st.header("Overstromingen en droogtes per land")
-        st.write(""""Hieronder is een kaart te zien van de hoeveelheid overstromingen en droogtes in de wereld. 
-        Er is een optie om de rampen apart te zien of tegelijktijdig. Er is een duidelijk verschil te zien 
-        tussen de twee soorten rampen en waar ze plaats vinden. In China gebeuren de meeste rampen in totaal 
-        en individueel.""")
+    ana2 = st.columns([0.5, 2, 0.5])[1]
+    with ana2:
+        with st.container(border=True):
+            ###tekst in container voor figuur
+            st.header("Overstromingen en droogtes per land")
+            st.write(""""Hieronder is een kaart te zien van de hoeveelheid overstromingen en droogtes in de wereld. 
+            Er is een optie om de rampen apart te zien of tegelijktijdig. Er is een duidelijk verschil te zien 
+            tussen de twee soorten rampen en waar ze plaats vinden. In China gebeuren de meeste rampen in totaal 
+            en individueel.""")
 
-        ##rampen op een kaart
-        ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
-                                  options=["Floods and Droughts","Floods", "Droughts"])
-        #Kleuren schalen voor rampen op kaart
-        Kleur_ramp = {"Floods and Droughts": {"filter": ["Flood", "Drought"],
-                                              "schaal": "Purples",
-                                              "label": "Aantal rampen",
-                                              "titel": "Overstromingen en Droogtes in de wereld"},
-                      "Floods": {"filter":   ["Flood"],
-                                 "schaal":   "Blues",
-                                 "label":    "Aantal overstromingen",
-                                 "titel":    "Overstromingen in de wereld"},
-                      "Droughts": {"filter":   ["Drought"],
-                                   "schaal":   [[0.0, "#ffffb2"], [0.2, "#fecc5c"], [0.4, "#fd8d3c"],
+            ##rampen op een kaart
+            ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
+                                    options=["Floods and Droughts","Floods", "Droughts"])
+            #Kleuren schalen voor rampen op kaart
+            Kleur_ramp = {"Floods and Droughts": {"filter": ["Flood", "Drought"],
+                                                "schaal": "Purples",
+                                                "label": "Aantal rampen",
+                                                "titel": "Overstromingen en Droogtes in de wereld"},
+                        "Floods": {"filter":   ["Flood"],
+                                    "schaal":   "Blues",
+                                    "label":    "Aantal overstromingen",
+                                    "titel":    "Overstromingen in de wereld"},
+                        "Droughts": {"filter":   ["Drought"],
+                                    "schaal":   [[0.0, "#ffffb2"], [0.2, "#fecc5c"], [0.4, "#fd8d3c"],
                                                 [0.6, "#f03b20"], [0.8, "#bd0026"], [1.0, "#67000d"]],
-                                   "label":    "Aantal droogtes",
-                                   "titel":    "Droogtes in de wereld",}}
-        Kleur = Kleur_ramp[ramp_keuze]
-        df_ramp_gefilterd = rampen_clean[rampen_clean['Disaster Type'].isin(Kleur["filter"])]
-        df_ramp_totaal = (df_ramp_gefilterd.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
-                          .count().rename(columns={'Disaster Type': 'Aantal'}))
-        fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
-                                 color='Aantal', hover_name='Country', color_continuous_scale=Kleur['schaal'],
-                                 labels={'Aantal': Kleur['label']},
-                                 title=Kleur['titel'])
-        fig_ramp.update_layout(coloraxis_colorbar=dict(title=Kleur['label'], thickness=15, len=0.75),
-                               geo=dict(showframe=False, showcoastlines=True),
-                               margin=dict(l=0, r=0, t=40, b=0))
-        st.plotly_chart(fig_ramp, use_container_width=True)
+                                    "label":    "Aantal droogtes",
+                                    "titel":    "Droogtes in de wereld",}}
+            Kleur = Kleur_ramp[ramp_keuze]
+            df_ramp_gefilterd = rampen_clean[rampen_clean['Disaster Type'].isin(Kleur["filter"])]
+            df_ramp_totaal = (df_ramp_gefilterd.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
+                            .count().rename(columns={'Disaster Type': 'Aantal'}))
+            fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
+                                    color='Aantal', hover_name='Country', color_continuous_scale=Kleur['schaal'],
+                                    labels={'Aantal': Kleur['label']},
+                                    title=Kleur['titel'])
+            fig_ramp.update_layout(coloraxis_colorbar=dict(title=Kleur['label'], thickness=15, len=0.75),
+                                geo=dict(showframe=False, showcoastlines=True),
+                                margin=dict(l=0, r=0, t=40, b=0))
+            st.plotly_chart(fig_ramp, use_container_width=True)
 
-    with st.container(border=True):
-        ### tekst voor het figuur
-        st.header("Verdeling overstromingen en droogtes in de wereld")
-        st.write("""Hieronder is te zien het aantal overstromingen en droogtes in de wereld vanaf 1961. 
-        Er is een duidelijk toenamen in de hoeveelheid overstromingen, maar een gematigde toename voor 
-        het aantal droogtes in de wereld. Beide worden beïnvloed door het feit dat hedendaags rampen 
-        beter worden bijgehouden.""")
+        with st.container(border=True):
+            ### tekst voor het figuur
+            st.header("Verdeling overstromingen en droogtes in de wereld")
+            st.write("""Hieronder is te zien het aantal overstromingen en droogtes in de wereld vanaf 1961. 
+            Er is een duidelijk toenamen in de hoeveelheid overstromingen, maar een gematigde toename voor 
+            het aantal droogtes in de wereld. Beide worden beïnvloed door het feit dat hedendaags rampen 
+            beter worden bijgehouden.""")
 
-        ##Tijdlijn van type rampen en jaar
-        df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
-        fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
-                          color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
-                          labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
-                          title='Verdeling overstromingen en droogtes in de wereld')
-        st.plotly_chart(fig_tijd, use_container_width=True)
+            ##Tijdlijn van type rampen en jaar
+            df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
+            fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
+                            color_discrete_map={'Drought': 'orange', 'Flood': 'steelblue'},
+                            labels={'Year': 'Jaar', 'Aantal': 'Aantal rampen', 'Disaster Type': 'Type'},
+                            title='Verdeling overstromingen en droogtes in de wereld')
+            st.plotly_chart(fig_tijd, use_container_width=True)
 
 #### TAB 4 Resultaten en conclusie
 with Tab_4:
-    cen2 = st.columns([1, 2, 1])[1]
+    cen2 = st.columns([0.5, 2, 0.5])[1]
     with cen2:
         st.write("Resultaten")
         st.write("testen van afstand in de zinnen of hij dit afhakt op een juiste "
