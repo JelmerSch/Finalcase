@@ -353,9 +353,79 @@ with Tab_3:
 with Tab_4:
     cen2 = st.columns([0.5, 2, 0.5])[1]
     with cen2:
-        st.write("Resultaten")
-        st.write("testen van afstand in de zinnen of hij dit afhakt op een juiste "
-                 "afstand. op deze manier is te zien of hij lange teksten op een "
-                 "juiste manier afhakt")
+        st.title("Resultaat en Conclusie")
+
+        with st.container(border=True):
+            st.header("Invloed van rampen op graanproductie")
+            st.write("""Hieronder is de productie van de 3 soorten graan te zien samen met het aantal 
+            overstromingen en droogtes per jaar. Selecteer een graansoort en ramptype om de relatie 
+            tussen de twee te bekijken.""")
+
+            # Selectie opties
+            col_sel1, col_sel2 = st.columns(2)
+            with col_sel1:
+                graan_res = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_res")
+            with col_sel2:
+                ramp_res = st.selectbox("Selecteer ramptype", ["Flood", "Drought"], key="ramp_res")
+
+            # Data voorbereiden
+            df_prod = (Fao_wereld_pivot_clean[
+                (Fao_wereld_pivot_clean['Area'] == 'World') &
+                (Fao_wereld_pivot_clean['Item'] == graan_res)
+            ].sort_values('Year')[['Year', 'Value_Production']])
+
+            df_ramp_jaar = (rampen_clean[rampen_clean['Disaster Type'] == ramp_res]
+                            .groupby('Year').size().reset_index(name='Aantal_rampen'))
+
+            df_samen = pd.merge(df_prod, df_ramp_jaar, on='Year', how='left').fillna(0)
+
+            # --- Figuur 1: Line Chart ---
+            st.subheader("Lijndiagram: productie en rampen over tijd")
+            fig_line = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig_line.add_trace(go.Scatter(
+                x=df_samen['Year'], y=df_samen['Value_Production'],
+                name='Productie (t)', line=dict(color='green'), mode='lines'
+            ), secondary_y=False)
+
+            fig_line.add_trace(go.Bar(
+                x=df_samen['Year'], y=df_samen['Aantal_rampen'],
+                name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'
+            ), secondary_y=True)
+
+            fig_line.update_layout(
+                title=f'Productie {graan_res} vs aantal {ramp_res}s per jaar',
+                xaxis_title='Jaar',
+                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+            )
+            fig_line.update_yaxes(title_text='Productie (t)', secondary_y=False,
+                                  title_font=dict(color='green'), tickfont=dict(color='green'))
+            fig_line.update_yaxes(title_text=f'Aantal {ramp_res}s', secondary_y=True,
+                                  title_font=dict(color='red'), tickfont=dict(color='red'))
+            st.plotly_chart(fig_line, use_container_width=True)
+
+            # --- Figuur 2: Bar Chart met gemiddelde productie per ramp-intensiteit ---
+            st.subheader("Staafdiagram: gemiddelde productie per ramp-intensiteit")
+            st.write("""Hieronder is de gemiddelde graanproductie gegroepeerd op het aantal rampen 
+            dat jaar. Dit geeft een beeld of jaren met meer rampen ook lagere productie hadden.""")
+
+            df_samen['Ramp_groep'] = pd.cut(
+                df_samen['Aantal_rampen'],
+                bins=[-1, 0, 2, 5, 100],
+                labels=['0 rampen', '1-2 rampen', '3-5 rampen', '6+ rampen']
+            )
+
+            df_gem = df_samen.groupby('Ramp_groep', observed=True)['Value_Production'].mean().reset_index()
+            df_gem.columns = ['Ramp_groep', 'Gem_Productie']
+
+            fig_bar = px.bar(
+                df_gem, x='Ramp_groep', y='Gem_Productie',
+                color='Ramp_groep',
+                color_discrete_sequence=px.colors.sequential.Reds,
+                labels={'Ramp_groep': 'Aantal rampen per jaar', 'Gem_Productie': 'Gem. productie (t)'},
+                title=f'Gemiddelde productie {graan_res} per ramp-intensiteit ({ramp_res})'
+            )
+            fig_bar.update_layout(showlegend=False)
+            st.plotly_chart(fig_bar, use_container_width=True)
 
 #### Einde script
