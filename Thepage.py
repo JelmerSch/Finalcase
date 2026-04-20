@@ -152,22 +152,66 @@ Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
 
 #### Begin TAB
-Tab_1, Tab_2, Tab_3, Tab_4 = st.tabs(["Hoofdpagina", "Granen Analyse", "Rampen Analyse", "Resultaat"])
+Tab_1, Tab_2, Tab_3, Tab_4 = st.tabs(["Hoofdpagina", "Granen Analyse", "Rampen Analyse", "Resultaat en Conclusie"])
 
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
-    cen = st.columns([1, 1, 1])[1]
+    cen = st.columns([1, 2, 1])[1]
     with cen:
-        st.write("Start")
-        st.write("testen van afstand in de zinnen of hij dit afhakt op een juiste "
-                 "afstand. op deze manier is te zien of hij lange teksten op een "
-                 "juiste manier afhakt")
+        ###tekst van de hoofdpagina
+        st.title("Hallo en welkom")
+
+        st.write("""In deze streamlit omgeving wordt er een analyse gedaan voor de case van graan productie in de wereld 
+        en de invloed van natuurlijke rampen op deze productie. Specifiek wordt er gekeken naar drie soorten 
+        graan namelijk wheat, rye en flax. Respectievelijk is dit in Nederlands tarwe, rogge en lijnzaad (vlas) 
+        meer over deze drie soorten graan zomenteen. Om de case minder omslagtig te maken zijn deze drie granen 
+        gekozen en zijn de soorten natuurlijke rampen beperkt naar "Floods" en "Droughts" oftewel overstromingen 
+        en droogte.""")
+
+        st.write("**De onderzoeksvraag is als volgt:** Wat is de invloed van overstromingen en droogtes op "
+                 "de productie van tarwe, rogge en lijnzaad (vlas)?")
+
+        st.header("Methode van de Analyse")
+        st.write("""Eerst zal er gekeken worden de productie van tarwe, rogge en lijnzaad (vlas) over de wereld. De data 
+        die gebruikt zal worden is van de FAO (Voedsel- en Landbouworganisatie van de Verenigede Naties). De 
+        data aangeboden van de FAO bevat info van allerlei landen in de wereld. Er zijn in deze datasets drie 
+        verschillende waardes te vinden op jaar basis sinds 1961 namelijk Productie in tonnen(t), hoeveelheid 
+        land waarop is geoogst in hectare(ha) en de yield in tonnen per hectare(t/ha). Hierbij wordt aangegeven 
+        of dit officiële cijfers, geschatte waardes of waardes die door externe zijn gegeven. Deze gegevens 
+        worden voorbereid voordat ze verwerkt worden in figuren om een beeld te krijgen van de verdeling van 
+        de productie van de granen in de wereld.""")
+
+        st.write("""Na het analyseren van de productie van de granen wordt er gekeken naar de 2 soorten rampen. Deze 
+        dataset komt van kaggle en bevat allerlei info over rampen vanaf 1900. Deze dataset wordt voorbereid 
+        om te gebruiken door het te limiteren naar 1961 en naar de twee type rampen "Floods" en "Droughts". 
+        Er zal niet gekeken worden naar de groottes van deze rampen tenzij het blijkt uit latere cijfers dat 
+        maar één of twee rampen echt invloed hadden op productie van graan.""")
+
+        st.write("""Als laatst worden de cijfers van de twee rampen en de productie van graan samen verwerkt in een figuur. 
+        Om een antwoordt te krijgen op de onderzoeksvraag en te concluderen of overstromingen en droogtes 
+        invloed hebben op productie van graan.""")
+
+        st.header("De 3 Soorten graan")
+        st.subheader("Flax")
+        st.write("Filler")
+
+        st.subheader("Rye")
+        st.write("Filler")
+
+        st.subheader("Wheat")
+        st.write("Filler")
+
 
 #### TAB 2 granen analyse
 with Tab_2:
-    st.write("Granen Analyse")
     with st.container(border=True):
-        st.write("Gemiddelde productie per land")
+        ###tekst in container
+        st.title("Gemiddelde productie graan per land")
+        st.write("""Hieronder is een wereld kaart waarin de gemiddelde productie van de verschillende soorten graan in 
+        tonnen te zien is. Dit is op een kleurenschaal gezet om een duidelijk verschil te zien tussen de 
+        landen. De witte stukken betekend dat er geen data beschikbaar is van deze landen wat betekend dat 
+        het graan soort daar niet wordt geproduceerd.""")
+
         graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
         df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
                     .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
@@ -183,13 +227,31 @@ with Tab_2:
                                   title=f'Gemiddelde Productie - {graan_kaart}')
         fig_kaart.update_layout(coloraxis_colorbar=dict(title='Gem Productie (t)',
                                                         thickness=15, len=0.75), geo=dict(showframe=False,
-                                                                                          showcoastlines=True),
-                                margin=dict(l=0, r=0, t=40, b=0))
+                                                        showcoastlines=True),margin=dict(l=0, r=0, t=40, b=0))
         st.plotly_chart(fig_kaart, use_container_width=True)
+        ###tekst in container na figuur
+        st.subheader("Rye")
+        st.write("""Zoals te zien is wordt er veel rye geproduceerd in Europa voornamelijk in Duitsland, Polen en Rusland. 
+        Er wordt vrijwel niks geproduceerd in Africa en nauwelijks iets in Oceanië, Azië en Noord- of Zuid Amerika.""")
+
+        st.subheader("Flax")
+        st.write("""Zoals te zien is op de kaart is de productie van flax in Europa het grootst en de grootste producenten 
+        zijn Rusland en Frankrijk. Er zijn weinig landen buiten Europa die het überhaupt produceren. China is 
+        het enige land buiten Europa die het in significante hoeveelheid produceert.""")
+
+        st.subheader("Wheat")
+        st.write("""Zoals te zien is op de kaart wordt wheat overal in de wereld geproduceerd. De grootste producenten 
+        van wheat zijn China, India, US en Rusland. Er is duidelijk te zien dat de verdeling van de productie 
+        van wheat veel meer verdeeld is over de wereld heen en dat het geproduceerd wordt op elk continent.""")
 
     ##line chart hier
     with st.container(border=True):
-        st.write("Wereld productie van 3 soorten graan")
+        ###tekst in container voor figuur
+        st.header("Wereld productie van 3 soorten graan")
+        st.write("""Hieronder is de wereld productie te zien van de verschillende soorten graan en hoe groot het gebied 
+        is waarop het geoogst is. Om de twee waardes tegelijk te zien zijn twee y-assen gebruikt en in 
+        verschillende kleuren gezet om een duidelijk contrast tussen de twee te hebben.""")
+
         graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
         df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
                                           (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
@@ -211,7 +273,11 @@ with Tab_2:
 
     ## Pie Charts
     with st.container(border=True):
-        st.write("Verdeling van productie van 3 soorten graan")
+        ###tekst in container voor figuur
+        st.header("Verdeling van productie van 3 soorten graan")
+        st.write("""Hieronder kan je zien de verdeling van de productie van de 3 soorten graan per continent. Dit geeft 
+        een duidelijk beeld welk type graan waar voornamelijk wordt geproduceerd in de wereld.""")
+
         pie1, pie2, pie3 = st.columns(3)
         for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
             avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten)) &
@@ -225,9 +291,14 @@ with Tab_2:
 
 #### TAB 3 rampen analyse
 with Tab_3:
-    st.write("Rampen Analyse")
     with st.container(border=True):
-        st.write("Overstromingen en droogtes per land")
+        ###tekst in container voor figuur
+        st.header("Overstromingen en droogtes per land")
+        st.write(""""Hieronder is een kaart te zien van de hoeveelheid overstromingen en droogtes in de wereld. 
+        Er is een optie om de rampen apart te zien of tegelijktijdig. Er is een duidelijk verschil te zien 
+        tussen de twee soorten rampen en waar ze plaats vinden. In China gebeuren de meeste rampen in totaal 
+        en individueel.""")
+
         ##rampen op een kaart
         ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
                                   options=["Floods and Droughts","Floods", "Droughts"])
@@ -259,7 +330,13 @@ with Tab_3:
         st.plotly_chart(fig_ramp, use_container_width=True)
 
     with st.container(border=True):
-        st.write("Verdeling overstromingen en droogtes in de wereld")
+        ### tekst voor het figuur
+        st.header("Verdeling overstromingen en droogtes in de wereld")
+        st.write("""Hieronder is te zien het aantal overstromingen en droogtes in de wereld vanaf 1961. 
+        Er is een duidelijk toenamen in de hoeveelheid overstromingen, maar een gematigde toename voor 
+        het aantal droogtes in de wereld. Beide worden beïnvloed door het feit dat hedendaags rampen 
+        beter worden bijgehouden.""")
+
         ##Tijdlijn van type rampen en jaar
         df_tijd = (rampen_clean.groupby(['Year', 'Disaster Type']).size().reset_index(name='Aantal'))
         fig_tijd = px.bar(df_tijd, x='Year', y='Aantal', color='Disaster Type', barmode='group',
