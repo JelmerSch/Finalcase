@@ -297,7 +297,7 @@ with Tab_3:
     with ana2:
         with st.container(border=True):
             ###tekst in container voor figuur
-            st.header("Overstromingen en droogtes per land")
+            st.title("Overstromingen en droogtes per land")
             st.write(""""Hieronder is een kaart te zien van de hoeveelheid overstromingen en droogtes in de wereld. 
             Er is een optie om de rampen apart te zien of tegelijktijdig. Er is een duidelijk verschil te zien 
             tussen de twee soorten rampen en waar ze plaats vinden. In China gebeuren de meeste rampen in totaal 
@@ -353,10 +353,8 @@ with Tab_3:
 with Tab_4:
     cen2 = st.columns([0.5, 2, 0.5])[1]
     with cen2:
-        st.title("Resultaat en Conclusie")
-
         with st.container(border=True):
-            st.header("Invloed van rampen op graanproductie")
+            st.title("Invloed van rampen op graanproductie")
             st.write("""Hieronder is de productie van de 3 soorten graan te zien samen met het aantal 
             overstromingen en droogtes per jaar. Selecteer een graansoort en ramptype om de relatie 
             tussen de twee te bekijken.""")
@@ -442,8 +440,8 @@ with Tab_4:
             col_land1, col_land2, col_land3 = st.columns(3)
             with col_land1:
                 land_res = st.selectbox("Selecteer land", beschikbare_landen, key="land_res",
-                                        index=beschikbare_landen.index('Netherlands')
-                                        if 'Netherlands' in beschikbare_landen else 0)
+                                        index=beschikbare_landen.index('China')
+                                        if 'China' in beschikbare_landen else 0)
             with col_land2:
                 graan_land = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_land")
             with col_land3:
@@ -496,5 +494,15 @@ with Tab_4:
                 fig_land.update_yaxes(title_text=f'Aantal {ramp_land}s', secondary_y=True,
                                       title_font=dict(color='red'), tickfont=dict(color='red'))
                 st.plotly_chart(fig_land, use_container_width=True)
+
+                #### Conclusie
+                st.subheader("Uiteindelijke conclusie")
+                st.write("""Als de onderzoeksvraag wordt beantwoord op wereld productie van de soorten graan
+                dan valt het moeilijk te zeggen of het echt invloed heeft om het niet duidelijk zichtbare invloed
+                heeft. Maar als het landelijk wordt bepaald kan er een beter argument gemaakt worden. Het blijft
+                moeilijk om een duidelijke invloed te concluderen zonder allerlei andere soorten factoren op de 
+                productie van de verschillende soorten granen mee te nemen in de analyse. Een vervolg onderzoek is
+                nodig dat andere factoren meerekent om een conclusie te trekken.""")
+
 
 #### Einde script
