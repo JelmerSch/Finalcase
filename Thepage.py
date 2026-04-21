@@ -418,7 +418,7 @@ with Tab_4:
 
             fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Area harvested'],
                                 name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
-                                yaxis3='y3'), secondary_y=False)
+                                yaxis='y3'), secondary_y=False)
 
             fig_line.add_trace(go.Bar(x=df_samen['Year'], y=df_samen['Aantal_rampen'],
                                 name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'),
