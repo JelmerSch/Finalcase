@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from nbconvert.filters.strings import files_url_pattern
 from plotly.subplots import make_subplots
 import plotly.express as px
 
@@ -118,6 +119,19 @@ def Clean_rampen(rampen_df):
     df = df.reset_index(drop=True)
     return df
 
+### Foto`s voor uitleg
+@st.cache_data(show_spinner="Foto Flax laden")
+def load_foto_Flax(f_url):
+    return f_url
+
+@st.cache_data(show_spinner="Foto Rye laden")
+def load_foto_Rye(r_url):
+    return r_url
+
+@st.cache_data(show_spinner="Foto Wheat laden")
+def load_foto_Wheat(w_url):
+    return w_url
+
 
 #### session status
 if "FAO_Wereld_data" not in st.session_state:
@@ -146,6 +160,11 @@ Fao_wereld_pivot = st.session_state["FAO_Wereld_data_pivot"]
 Fao_wereld_pivot_clean = st.session_state["FAO_Wereld_pivot_clean"]
 rampen = st.session_state["Rampen"]
 rampen_clean = st.session_state["Rampen_clean"]
+
+#laden url van foto's
+f_url = load_foto_Flax("https://github.com/JelmerSch/Finalcase/blob/main/Flax(blond).jpg")
+r_url = load_foto_Rye("https://github.com/JelmerSch/Finalcase/blob/main/Rye.jpg")
+w_url = load_foto_Wheat("https://github.com/JelmerSch/Finalcase/blob/main/Wheat.jpg")
 
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
@@ -192,14 +211,27 @@ with Tab_1:
         invloed hebben op productie van graan.""")
 
         st.header("De 3 Soorten graan")
-        st.subheader("Flax")
-        st.write("Filler")
+        st.subheader("Flax (Vlas of Lijnzaad")
+        st.write("""Lijnzaad is het zaad van (olie)vlas. Lijnzaad heeft twee grote gebruiksdoelen. 
+        Het wordt gebruikt als grondstof voor lijnzaadolie dat met behulp van een oliemolen uit het 
+        zaad wordt geperst. Het restproduct van dit proces noemt men lijnkoek. Lijnkoeken worden 
+        gebruikt als veevoer. Het wordt ook gebruikt als ingrediënt in brood, muesli of andere 
+        keukentoepassingen.""")
+        st.image(f_url)
 
-        st.subheader("Rye")
-        st.write("Filler")
+        st.subheader("Rye (Rogge)")
+        st.write("""Rogge wordt vooral geteeld om er roggebrood van te maken. Ook ontbijtkoek 
+        wordt van rogge gemaakt. In Ierland en de Verenigde Staten wordt rogge gebruikt als 
+        natuurlijke grondstof voor whisky. Rogge wordt voornamelijk op de zand- en dalgronden 
+        verbouwd.""")
+        st.image(r_url)
 
-        st.subheader("Wheat")
-        st.write("Filler")
+        st.subheader("Wheat (Tarwe)")
+        st.write("""Tarwe (Triticum) is een geslacht van granen waar de mensheid zich mee voedt, 
+        naast rijst en maïs. Tarwe is een van de oudste gedomesticeerde planten. De domesticatie 
+        vond waarschijnlijk ongeveer 10.000 jaar geleden plaats in het Midden-Oosten en Afrika 
+        van Syrië tot Kasjmir en naar het zuiden tot in Ethiopië.""")
+        st.image(w_url)
 
 
 #### TAB 2 granen analyse
@@ -211,8 +243,8 @@ with Tab_2:
             st.title("Gemiddelde productie graan per land")
             st.write("""Hieronder is een wereld kaart waarin de gemiddelde productie van de verschillende soorten graan in 
             tonnen te zien is. Dit is op een kleurenschaal gezet om een duidelijk verschil te zien tussen de 
-            landen. De witte stukken betekend dat er geen data beschikbaar is van deze landen wat betekend dat 
-            het graan soort daar niet wordt geproduceerd.""")
+            landen. De landen die wit zijn hebben geen data beschikbaar wat betekend dat het graan soort daar 
+            niet wordt geproduceerd.""")
 
             graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
             df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
@@ -244,7 +276,7 @@ with Tab_2:
             st.subheader("Wheat")
             st.write("""Zoals te zien is op de kaart wordt wheat overal in de wereld geproduceerd. De grootste producenten 
             van wheat zijn China, India, US en Rusland. Er is duidelijk te zien dat de verdeling van de productie 
-            van wheat veel meer verdeeld is over de wereld heen en dat het geproduceerd wordt op elk continent.""")
+            van wheat veel meer verdeeld is in de wereld en dat het geproduceerd wordt op elk continent.""")
 
         ##line chart hier
         with st.container(border=True):
@@ -277,15 +309,14 @@ with Tab_2:
         with st.container(border=True):
             ###tekst in container voor figuur
             st.header("Verdeling van productie van 3 soorten graan")
-            st.write("""Hieronder kan je zien de verdeling van de productie van de 3 soorten graan per continent. Dit geeft 
-            een duidelijk beeld welk type graan waar voornamelijk wordt geproduceerd in de wereld.""")
+            st.write("""Hieronder kan je zien de verdeling van de productie van de 3 soorten graan per continent. 
+            Dit geeft een duidelijk beeld welk type graan waar voornamelijk wordt geproduceerd in de wereld.""")
 
             pie1, pie2, pie3 = st.columns(3)
             for col, graan in zip([pie1, pie2, pie3], Granen_soorten):
                 avg = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'].isin(Continenten)) &
-                                            (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')[
-                        'Value_Production'].mean()
-                    .reindex(Continenten).fillna(0))
+                                            (Fao_wereld_pivot_clean['Item'] == graan)].groupby('Area')
+                                            ['Value_Production'].mean().reindex(Continenten).fillna(0))
                 fig_pie = go.Figure(go.Pie(labels=avg.index.tolist(), values=avg.values.tolist(), hole=0.3))
                 fig_pie.update_layout(title=graan, showlegend=True)
                 with col:
@@ -307,19 +338,19 @@ with Tab_3:
             ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
                                     options=["Floods and Droughts","Floods", "Droughts"])
             #Kleuren schalen voor rampen op kaart
-            Kleur_ramp = {"Floods and Droughts": {"filter": ["Flood", "Drought"],
-                                                "schaal": "Purples",
-                                                "label": "Aantal rampen",
-                                                "titel": "Overstromingen en Droogtes in de wereld"},
-                        "Floods": {"filter":   ["Flood"],
-                                    "schaal":   "Blues",
-                                    "label":    "Aantal overstromingen",
-                                    "titel":    "Overstromingen in de wereld"},
-                        "Droughts": {"filter":   ["Drought"],
-                                    "schaal":   [[0.0, "#ffffb2"], [0.2, "#fecc5c"], [0.4, "#fd8d3c"],
-                                                [0.6, "#f03b20"], [0.8, "#bd0026"], [1.0, "#67000d"]],
-                                    "label":    "Aantal droogtes",
-                                    "titel":    "Droogtes in de wereld",}}
+            Kleur_ramp = {"Floods and Droughts":    {"filter": ["Flood", "Drought"],
+                                                    "schaal": "Purples",
+                                                    "label": "Aantal rampen",
+                                                    "titel": "Overstromingen en Droogtes in de wereld"},
+                        "Floods": {"filter":        ["Flood"],
+                                    "schaal":       "Blues",
+                                    "label":        "Aantal overstromingen",
+                                    "titel":        "Overstromingen in de wereld"},
+                        "Droughts": {"filter":      ["Drought"],
+                                    "schaal":       [[0.0, "#ffffb2"], [0.2, "#fecc5c"], [0.4, "#fd8d3c"],
+                                                    [0.6, "#f03b20"], [0.8, "#bd0026"], [1.0, "#67000d"]],
+                                    "label":        "Aantal droogtes",
+                                    "titel":        "Droogtes in de wereld",}}
             Kleur = Kleur_ramp[ramp_keuze]
             df_ramp_gefilterd = rampen_clean[rampen_clean['Disaster Type'].isin(Kleur["filter"])]
             df_ramp_totaal = (df_ramp_gefilterd.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
@@ -357,84 +388,62 @@ with Tab_4:
             st.title("Invloed van rampen op graanproductie")
             st.write("""Hieronder is de productie van de 3 soorten graan te zien samen met het aantal 
             overstromingen en droogtes per jaar. Selecteer een graansoort en ramptype om de relatie 
-            tussen de twee te bekijken.""")
+            tussen de twee te bekijken. Er is ook de optie om de productie per continent te bekijken""")
 
-            col_sel1, col_sel2 = st.columns(2)
+            ### selectie boxen
+            col_sel1, col_sel2, col_sel3 = st.columns(3)
             with col_sel1:
                 graan_res = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_res")
             with col_sel2:
                 ramp_res = st.selectbox("Selecteer ramptype", ["Flood", "Drought"], key="ramp_res")
+            with col_sel3:
+                gebied_opties = ['World'] + Continenten
+                gebied_res = st.selectbox("Selecteer gebied", gebied_opties, key="gebied_res")
 
-            # Data voorbereiden
-            df_prod = (Fao_wereld_pivot_clean[
-                (Fao_wereld_pivot_clean['Area'] == 'World') &
-                (Fao_wereld_pivot_clean['Item'] == graan_res)
-            ].sort_values('Year')[['Year', 'Value_Production', 'Value_Area harvested']])
+            ### info voorbereiden lijn diagramen
+            df_prod = (Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == gebied_res) &
+                      (Fao_wereld_pivot_clean['Item'] == graan_res)].sort_values('Year')
+                      [['Year', 'Value_Production', 'Value_Area harvested']])
 
             df_ramp_jaar = (rampen_clean[rampen_clean['Disaster Type'] == ramp_res]
                             .groupby('Year').size().reset_index(name='Aantal_rampen'))
 
             df_samen = pd.merge(df_prod, df_ramp_jaar, on='Year', how='left').fillna(0)
 
-            # --- Lijndiagram wereld ---
+            #### 1ste lijn diagram met wereld en contineten
             fig_line = make_subplots(specs=[[{"secondary_y": True}]])
 
-            fig_line.add_trace(go.Scatter(
-                x=df_samen['Year'], y=df_samen['Value_Production'],
-                name='Productie (t)', line=dict(color='green'), mode='lines'
-            ), secondary_y=False)
+            fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Production'],
+                                name='Productie (t)', line=dict(color='green'), mode='lines'),
+                                secondary_y=False)
 
-            fig_line.add_trace(go.Scatter(
-                x=df_samen['Year'], y=df_samen['Value_Area harvested'],
-                name='Area harvested (ha)', line=dict(color='purple'), mode='lines'
-            ), secondary_y=False)
+            fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Area harvested'],
+                                name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
+                                yaxis3='y3'), secondary_y=False)
 
-            fig_line.add_trace(go.Bar(
-                x=df_samen['Year'], y=df_samen['Aantal_rampen'],
-                name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'
-            ), secondary_y=True)
+            fig_line.add_trace(go.Bar(x=df_samen['Year'], y=df_samen['Aantal_rampen'],
+                                name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'),
+                                secondary_y=True)
 
-            fig_line.update_layout(
-                title=f'Wereldproductie {graan_res} vs aantal {ramp_res}s per jaar',
-                xaxis_title='Jaar',
-                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
-            )
-            fig_line.update_yaxes(title_text='Productie (t) / Area harvested (ha)', secondary_y=False)
-            fig_line.update_yaxes(title_text=f'Aantal {ramp_res}s', secondary_y=True,
-                                  title_font=dict(color='red'), tickfont=dict(color='red'))
+            fig_line.update_layout(title=f'Productie {graan_res} ({gebied_res}) vs aantal {ramp_res}s per jaar',
+                xaxis_title='Jaar',legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+                yaxis=dict(title='Productie (t)', title_font=dict(color='green'),
+                           tickfont=dict(color='green'), side='left'),
+                yaxis2=dict(title=f'Aantal {ramp_res}s', title_font=dict(color='red'),
+                            tickfont=dict(color='red'), side='right', overlaying='y'),
+                yaxis3=dict(title='Area harvested (ha)', title_font=dict(color='purple'),
+                            tickfont=dict(color='purple'), side='left', overlaying='y',
+                            anchor='free', position=0.06, showgrid=False),
+                xaxis=dict(domain=[0.12, 1.0]))
             st.plotly_chart(fig_line, use_container_width=True)
 
-            # --- Staafdiagram ---
-            st.subheader("Staafdiagram: gemiddelde productie per ramp-intensiteit")
-            st.write("""Hieronder is de gemiddelde graanproductie gegroepeerd op het aantal rampen 
-            dat jaar. Dit geeft een beeld of jaren met meer rampen ook lagere productie hadden.""")
-
-            df_samen['Ramp_groep'] = pd.cut(
-                df_samen['Aantal_rampen'],
-                bins=[-1, 0, 2, 5, 100],
-                labels=['0 rampen', '1-2 rampen', '3-5 rampen', '6+ rampen']
-            )
-
-            df_gem = df_samen.groupby('Ramp_groep', observed=True)['Value_Production'].mean().reset_index()
-            df_gem.columns = ['Ramp_groep', 'Gem_Productie']
-
-            fig_bar = px.bar(
-                df_gem, x='Ramp_groep', y='Gem_Productie',
-                color='Ramp_groep',
-                color_discrete_sequence=px.colors.sequential.Reds,
-                labels={'Ramp_groep': 'Aantal rampen per jaar', 'Gem_Productie': 'Gem. productie (t)'},
-                title=f'Gemiddelde productie {graan_res} per ramp-intensiteit ({ramp_res})'
-            )
-            fig_bar.update_layout(showlegend=False)
-            st.plotly_chart(fig_bar, use_container_width=True)
-
-        # --- Tweede container: per land ---
+        # 2de lijn diagram met landen
         with st.container(border=True):
             st.header("Invloed van rampen op graanproductie per land")
             st.write("""Hieronder is dezelfde analyse te zien maar dan voor een specifiek land. 
             Selecteer een land, graansoort en ramptype om de relatie te bekijken.""")
 
-            # Landen ophalen die data hebben
+            # data landen ophalen
             beschikbare_landen = sorted(Fao_pivot_clean['Area'].unique().tolist())
 
             col_land1, col_land2, col_land3 = st.columns(3)
@@ -447,52 +456,51 @@ with Tab_4:
             with col_land3:
                 ramp_land = st.selectbox("Selecteer ramptype", ["Flood", "Drought"], key="ramp_land")
 
-            # Data voorbereiden voor gekozen land
-            df_prod_land = (Fao_pivot_clean[
-                (Fao_pivot_clean['Area'] == land_res) &
-                (Fao_pivot_clean['Item'] == graan_land)
-            ].sort_values('Year')[['Year', 'Value_Production', 'Value_Area harvested']])
+            # info voorbereiden lijn diagramen
+            df_prod_land = (Fao_pivot_clean[(Fao_pivot_clean['Area'] == land_res) &
+                           (Fao_pivot_clean['Item'] == graan_land)].sort_values('Year')
+                           [['Year', 'Value_Production', 'Value_Area harvested']])
 
             # Rampen filteren op land
             land_iso = rampen_clean[rampen_clean['Country'] == land_res]['ISO'].unique()
             if len(land_iso) > 0:
-                df_ramp_land = (rampen_clean[
-                    (rampen_clean['ISO'].isin(land_iso)) &
-                    (rampen_clean['Disaster Type'] == ramp_land)
-                ].groupby('Year').size().reset_index(name='Aantal_rampen'))
+                df_ramp_land = (rampen_clean[(rampen_clean['ISO'].isin(land_iso)) &
+                               (rampen_clean['Disaster Type'] == ramp_land)]
+                               .groupby('Year').size().reset_index(name='Aantal_rampen'))
             else:
                 df_ramp_land = pd.DataFrame(columns=['Year', 'Aantal_rampen'])
 
             df_samen_land = pd.merge(df_prod_land, df_ramp_land, on='Year', how='left').fillna(0)
 
+            ### traces maken voor figuur met fallback voor geen data
             if df_samen_land.empty:
                 st.warning(f"Geen data beschikbaar voor {land_res} met {graan_land}.")
             else:
                 fig_land = make_subplots(specs=[[{"secondary_y": True}]])
 
-                fig_land.add_trace(go.Scatter(
-                    x=df_samen_land['Year'], y=df_samen_land['Value_Production'],
-                    name='Productie (t)', line=dict(color='green'), mode='lines'
-                ), secondary_y=False)
+                fig_land.add_trace(go.Scatter(x=df_samen_land['Year'], y=df_samen_land['Value_Production'],
+                                              name='Productie (t)', line=dict(color='green'), mode='lines'),
+                                              secondary_y=False)
 
-                fig_land.add_trace(go.Scatter(
-                    x=df_samen_land['Year'], y=df_samen_land['Value_Area harvested'],
-                    name='Area harvested (ha)', line=dict(color='purple'), mode='lines'
-                ), secondary_y=False)
+                fig_land.add_trace(go.Scatter(x=df_samen_land['Year'], y=df_samen_land['Value_Area harvested'],
+                                              name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
+                                              yaxis='y3'), secondary_y=False)
 
-                fig_land.add_trace(go.Bar(
-                    x=df_samen_land['Year'], y=df_samen_land['Aantal_rampen'],
-                    name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)'
-                ), secondary_y=True)
+                fig_land.add_trace(go.Bar(x=df_samen_land['Year'], y=df_samen_land['Aantal_rampen'],
+                                              name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)'),
+                                              secondary_y=True)
 
-                fig_land.update_layout(
-                    title=f'Productie {graan_land} in {land_res} vs aantal {ramp_land}s per jaar',
-                    xaxis_title='Jaar',
-                    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
-                )
-                fig_land.update_yaxes(title_text='Productie (t) / Area harvested (ha)', secondary_y=False)
-                fig_land.update_yaxes(title_text=f'Aantal {ramp_land}s', secondary_y=True,
-                                      title_font=dict(color='red'), tickfont=dict(color='red'))
+                fig_land.update_layout(title=f'Productie {graan_land} in {land_res} vs aantal {ramp_land}s per jaar',
+                                       xaxis_title='Jaar',
+                                       legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+                                       yaxis=dict(title='Productie (t)', title_font=dict(color='green'),
+                                       tickfont=dict(color='green'), side='left'),
+                                       yaxis2=dict(title=f'Aantal {ramp_land}s', title_font=dict(color='red'),
+                                       tickfont=dict(color='red'), side='right', overlaying='y'),
+                                       yaxis3=dict(title='Area harvested (ha)', title_font=dict(color='purple'),
+                                       tickfont=dict(color='purple'), side='left', overlaying='y',
+                                       anchor='free', position=0.06, showgrid=False),
+                                       xaxis=dict(domain=[0.12, 1.0]))
                 st.plotly_chart(fig_land, use_container_width=True)
 
                 #### Conclusie
