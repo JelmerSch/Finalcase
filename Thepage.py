@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from nbconvert.filters.strings import files_url_pattern
 from plotly.subplots import make_subplots
 import plotly.express as px
 
@@ -162,9 +161,9 @@ rampen = st.session_state["Rampen"]
 rampen_clean = st.session_state["Rampen_clean"]
 
 #laden url van foto's
-f_url = load_foto_Flax("https://github.com/JelmerSch/Finalcase/blob/main/Flax(blond).jpg")
-r_url = load_foto_Rye("https://github.com/JelmerSch/Finalcase/blob/main/Rye.jpg")
-w_url = load_foto_Wheat("https://github.com/JelmerSch/Finalcase/blob/main/Wheat.jpg")
+f_url = load_foto_Flax("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Flax(blond).jpg")
+r_url = load_foto_Rye("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Rye.jpg")
+w_url = load_foto_Wheat("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Wheat.jpg")
 
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
@@ -419,7 +418,7 @@ with Tab_4:
 
             fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Area harvested'],
                                 name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
-                                yaxis3='y3'), secondary_y=False)
+                                yaxis='y3'), secondary_y=False)
 
             fig_line.add_trace(go.Bar(x=df_samen['Year'], y=df_samen['Aantal_rampen'],
                                 name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'),
