@@ -8,7 +8,6 @@ import plotly.express as px
 #### pagina indeling
 st.set_page_config(layout="wide")
 
-
 ############### cache ######################
 ###Cache van wereld data
 @st.cache_data(show_spinner="Wereld Fao")
@@ -16,20 +15,15 @@ def Wereld_FAO(FAO_wereld):
     FAO_Wereld_data = pd.read_csv(FAO_wereld)
     return FAO_Wereld_data
 
-
-###Cache van wereld pivot data
+###Cache van wereld pivot data en pivotting dataframe
 @st.cache_data(show_spinner="Wereld Fao pivot")
 def Wereld_FAO_pivot(FAO_Wereld_data):
     FAO_Wereld_data_pivot = FAO_Wereld_data.pivot_table(
         index=['Area Code (M49)', 'Area', 'Item', 'Year', 'Flag', 'Flag Description'],
-        columns='Element',
-        values=['Unit', 'Value'],
-        aggfunc='first',
-    ).reset_index()
+        columns='Element', values=['Unit', 'Value'], aggfunc='first').reset_index()
 
     # aanpassen en toevoegen kolommen units en values pivot
-    FAO_Wereld_data_pivot.columns = [
-        '_'.join(col).strip('_') if col[1] else col[0]
+    FAO_Wereld_data_pivot.columns = ['_'.join(col).strip('_') if col[1] else col[0]
         for col in FAO_Wereld_data_pivot.columns]
 
     # nieuwe kolom voor totale yield
@@ -51,14 +45,10 @@ def load_FAO(FAOSTAT_data):
 def pivot_FAO(FAO_data):
     FAO_pivot = FAO_data.pivot_table(
         index=['Area Code (M49)', 'Area', 'Item', 'Year', 'Flag', 'Flag Description'],
-        columns='Element',
-        values=['Unit', 'Value'],
-        aggfunc='first',
-    ).reset_index()
+        columns='Element', values=['Unit', 'Value'], aggfunc='first').reset_index()
 
     # aanpassen en toevoegen kolommen units en values pivot
-    FAO_pivot.columns = [
-        '_'.join(col).strip('_') if col[1] else col[0]
+    FAO_pivot.columns = ['_'.join(col).strip('_') if col[1] else col[0]
         for col in FAO_pivot.columns]
 
     # nieuwe kolom voor totale yield
@@ -75,7 +65,7 @@ def Clean_wereld_pivot(FAO_Wereld_clean):
     # kolom sorteren op prio
     df = FAO_Wereld_clean.copy()
 
-    # multiIndex kolommen voorkomen
+    # multiIndex kolommen voorkomen (probleem door huidige versie pandas)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = ['_'.join(col).strip('_') if col[1] else col[0] for col in df.columns]
 
@@ -118,7 +108,8 @@ def Clean_rampen(rampen_df):
     df = df.reset_index(drop=True)
     return df
 
-### Foto`s voor uitleg
+### Foto`s voor uitleg van soorten granen
+### in cahce gezet voor voorkomen inladen
 @st.cache_data(show_spinner="Foto Flax laden")
 def load_foto_Flax(f_url):
     return f_url
@@ -132,7 +123,7 @@ def load_foto_Wheat(w_url):
     return w_url
 
 
-#### session status
+#### session status voor mogelijk toevogen van slider of dergelijks
 if "FAO_Wereld_data" not in st.session_state:
     st.session_state["FAO_Wereld_data"] = Wereld_FAO("FAOSTAT_wereld_data_en_4-17-2026.csv")
 if "FAO_Wereld_data_pivot" not in st.session_state:
@@ -165,7 +156,7 @@ f_url = load_foto_Flax("https://raw.githubusercontent.com/JelmerSch/Finalcase/ma
 r_url = load_foto_Rye("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Rye.jpg")
 w_url = load_foto_Wheat("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Wheat2.jpg")
 
-### voor figuren
+### voor figuren en dergelijks
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
 Continenten = ['Europe', 'Oceania', 'Africa', 'Americas', 'Asia']
 
@@ -174,6 +165,7 @@ Tab_1, Tab_2, Tab_3, Tab_4 = st.tabs(["Hoofdpagina", "Granen Analyse", "Rampen A
 
 #### TAB 1 Hoofdpagina + intro
 with Tab_1:
+    ### scherm op delen in 3 en selcteren van de middelste
     cen = st.columns([1, 2, 1])[1]
     with cen:
         ###tekst van de hoofdpagina
@@ -245,14 +237,33 @@ with Tab_2:
             landen. De landen die wit zijn hebben geen data beschikbaar wat betekend dat het graan soort daar 
             niet wordt geproduceerd.""")
 
+            ##select box maken
             graan_kaart = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_kraat")
-            df_kaart = (Fao_pivot_clean[Fao_pivot_clean['Item'] == graan_kaart]
+
+            #slider voor tijd
+            jaar_min_kaart = int(Fao_pivot_clean['Year'].min())
+            jaar_max_kaart = int(Fao_pivot_clean['Year'].max())
+            jaar_slider_kaart = st.slider("Bepaal het jaarbereik", min_value=jaar_min_kaart, max_value=jaar_max_kaart,
+                                          value=(jaar_min_kaart, jaar_max_kaart), key="jaar_slider")
+
+            # voorwerk van kaart maken.
+            df_kaart = (Fao_pivot_clean[(Fao_pivot_clean['Item'] == graan_kaart) &
+                        (Fao_pivot_clean['Year'] >= jaar_slider_kaart[0]) &
+                        (Fao_pivot_clean['Year'] <= jaar_slider_kaart[1])]
                         .groupby(['Area', 'Area Code (M49)'], as_index=False)['Value_Production'].mean())
             df_kaart.columns = ['Area', 'Area_Code', 'Gem_Productie']
+
+            ### alle waarde naar num zetten voor verijderen foute waarde
             df_kaart['Area_Code'] = pd.to_numeric(df_kaart['Area_Code'], errors='coerce')
+
+            ### verwijderen van NaN waardes
             df_kaart = df_kaart.dropna(subset=['Area_Code'])
+
+            ### verwijder de decimalen door integers te maken,
+            ###omzetten daarna naar strings en zorg dat elek string 3 cijfers langs is
             df_kaart['Area_Code'] = df_kaart['Area_Code'].astype(int).astype(str).str.zfill(3)
 
+            #kaart in kwestie
             fig_kaart = px.choropleth(df_kaart, locations='Area', locationmode='country names',
                                     color='Gem_Productie', hover_name='Area',
                                     color_continuous_scale='YlOrRd',
@@ -285,9 +296,11 @@ with Tab_2:
             is waarop het geoogst is. Om de twee waardes tegelijk te zien zijn twee y-assen gebruikt en in 
             verschillende kleuren gezet om een duidelijk contrast tussen de twee te hebben.""")
 
+            ### voorbereiden van data figuur
             graan_lijn = st.selectbox("Selecteer graansoort", Granen_soorten, key="graan_lijn")
             df_graan = Fao_wereld_pivot_clean[(Fao_wereld_pivot_clean['Area'] == 'World') &
                                             (Fao_wereld_pivot_clean['Item'] == graan_lijn)].sort_values('Year')
+            ### figuur maken
             fig = make_subplots(specs=[[{"secondary_y": True}]])
             fig.add_trace(go.Scatter(x=df_graan['Year'], y=df_graan['Value_Area harvested'],
                                     name='Area harvested (ha)', line=dict(color='blue'),
@@ -333,9 +346,16 @@ with Tab_3:
             tussen de twee soorten rampen en waar ze plaats vinden. In China gebeuren de meeste rampen in totaal 
             en individueel.""")
 
-            ##rampen op een kaart
+            ##selectbox voor de een kaart
             ramp_keuze = st.selectbox("Selecteer het type kaart met rampen", key="ramp_keuze",
                                     options=["Floods and Droughts","Floods", "Droughts"])
+
+            ###slider voor de kaart
+            jaar_min_ramp = int(rampen_clean['Year'].min())
+            jaar_max_ramp = int(rampen_clean['Year'].max())
+            jaar_slider_ramp = st.slider("Selecteer jaarbereik", min_value=jaar_min_ramp, max_value=jaar_max_ramp,
+                                        value=(jaar_min_ramp, jaar_max_ramp), key="slider_ramp")
+
             #Kleuren schalen voor rampen op kaart
             Kleur_ramp = {"Floods and Droughts":    {"filter": ["Flood", "Drought"],
                                                     "schaal": "Purples",
@@ -351,7 +371,9 @@ with Tab_3:
                                     "label":        "Aantal droogtes",
                                     "titel":        "Droogtes in de wereld",}}
             Kleur = Kleur_ramp[ramp_keuze]
-            df_ramp_gefilterd = rampen_clean[rampen_clean['Disaster Type'].isin(Kleur["filter"])]
+            df_ramp_gefilterd = rampen_clean[(rampen_clean['Disaster Type'].isin(Kleur["filter"])) &
+                                             (rampen_clean['Year'] >= jaar_slider_ramp[0]) &
+                                             (rampen_clean['Year'] <= jaar_slider_ramp[1])]
             df_ramp_totaal = (df_ramp_gefilterd.groupby(['Country', 'ISO'], as_index=False)['Disaster Type']
                             .count().rename(columns={'Disaster Type': 'Aantal'}))
             fig_ramp = px.choropleth(df_ramp_totaal, locations='ISO', locationmode='ISO-3',
@@ -485,7 +507,7 @@ with Tab_4:
                                               yaxis='y3'))
 
                 fig_land.add_trace(go.Bar(x=df_samen_land['Year'], y=df_samen_land['Aantal_rampen'],
-                                              name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)'),
+                                              name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)',
                                               yaxis='y2'))
 
                 fig_land.update_layout(title=f'Productie {graan_land} in {land_res} vs aantal {ramp_land}s per jaar',
