@@ -161,9 +161,9 @@ rampen = st.session_state["Rampen"]
 rampen_clean = st.session_state["Rampen_clean"]
 
 #laden url van foto's
-f_url = load_foto_Flax("https://github.com/JelmerSch/Finalcase/blob/main/Flax(blond).jpg")
-r_url = load_foto_Rye("https://github.com/JelmerSch/Finalcase/blob/main/Rye.jpg")
-w_url = load_foto_Wheat("https://github.com/JelmerSch/Finalcase/blob/main/Wheat.jpg")
+f_url = load_foto_Flax("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Flax(blond).jpg")
+r_url = load_foto_Rye("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Rye.jpg")
+w_url = load_foto_Wheat("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Wheat.jpg")
 
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
