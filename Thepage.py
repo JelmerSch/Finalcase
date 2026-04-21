@@ -161,9 +161,9 @@ rampen = st.session_state["Rampen"]
 rampen_clean = st.session_state["Rampen_clean"]
 
 #laden url van foto's
-f_url = load_foto_Flax("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Flax(blond).jpg")
+f_url = load_foto_Flax("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Flax(blond)2.jpg")
 r_url = load_foto_Rye("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Rye.jpg")
-w_url = load_foto_Wheat("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Wheat.jpg")
+w_url = load_foto_Wheat("https://raw.githubusercontent.com/JelmerSch/Finalcase/main/Wheat2.jpg")
 
 ### voor figuren
 Granen_soorten = ['Rye', 'Flax, raw or retted', 'Wheat']
@@ -410,30 +410,29 @@ with Tab_4:
             df_samen = pd.merge(df_prod, df_ramp_jaar, on='Year', how='left').fillna(0)
 
             #### 1ste lijn diagram met wereld en contineten
-            fig_line = make_subplots(specs=[[{"secondary_y": True}]])
+            fig_line = go.Figure()
 
             fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Production'],
-                                name='Productie (t)', line=dict(color='green'), mode='lines'),
-                                secondary_y=False)
+                                name='Productie (t)', line=dict(color='green'), mode='lines', yaxis='y1'))
 
             fig_line.add_trace(go.Scatter(x=df_samen['Year'], y=df_samen['Value_Area harvested'],
                                 name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
-                                yaxis='y3'), secondary_y=False)
+                                yaxis='y3'))
 
             fig_line.add_trace(go.Bar(x=df_samen['Year'], y=df_samen['Aantal_rampen'],
-                                name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)'),
-                                secondary_y=True)
+                                name=f'Aantal {ramp_res}s', marker_color='rgba(255, 100, 100, 0.4)',
+                                yaxis='y2'))
 
             fig_line.update_layout(title=f'Productie {graan_res} ({gebied_res}) vs aantal {ramp_res}s per jaar',
-                xaxis_title='Jaar',legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
                 yaxis=dict(title='Productie (t)', title_font=dict(color='green'),
                            tickfont=dict(color='green'), side='left'),
                 yaxis2=dict(title=f'Aantal {ramp_res}s', title_font=dict(color='red'),
                             tickfont=dict(color='red'), side='right', overlaying='y'),
                 yaxis3=dict(title='Area harvested (ha)', title_font=dict(color='purple'),
                             tickfont=dict(color='purple'), side='left', overlaying='y',
-                            anchor='free', position=0.06, showgrid=False),
-                xaxis=dict(domain=[0.12, 1.0]))
+                            anchor='free', position=0.0, showgrid=False),
+                xaxis=dict(title='Jaar', domain=[0.12, 1.0]),
+                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
             st.plotly_chart(fig_line, use_container_width=True)
 
         # 2de lijn diagram met landen
@@ -475,22 +474,21 @@ with Tab_4:
             if df_samen_land.empty:
                 st.warning(f"Geen data beschikbaar voor {land_res} met {graan_land}.")
             else:
-                fig_land = make_subplots(specs=[[{"secondary_y": True}]])
+                fig_land = go.Figure()
 
                 fig_land.add_trace(go.Scatter(x=df_samen_land['Year'], y=df_samen_land['Value_Production'],
-                                              name='Productie (t)', line=dict(color='green'), mode='lines'),
-                                              secondary_y=False)
+                                              name='Productie (t)', line=dict(color='green'), mode='lines',
+                                              yaxis='y1'))
 
                 fig_land.add_trace(go.Scatter(x=df_samen_land['Year'], y=df_samen_land['Value_Area harvested'],
                                               name='Area harvested (ha)', line=dict(color='purple'), mode='lines',
-                                              yaxis='y3'), secondary_y=False)
+                                              yaxis='y3'))
 
                 fig_land.add_trace(go.Bar(x=df_samen_land['Year'], y=df_samen_land['Aantal_rampen'],
                                               name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)'),
-                                              secondary_y=True)
+                                              yaxis='y2'))
 
                 fig_land.update_layout(title=f'Productie {graan_land} in {land_res} vs aantal {ramp_land}s per jaar',
-                                       xaxis_title='Jaar',
                                        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
                                        yaxis=dict(title='Productie (t)', title_font=dict(color='green'),
                                        tickfont=dict(color='green'), side='left'),
@@ -498,8 +496,8 @@ with Tab_4:
                                        tickfont=dict(color='red'), side='right', overlaying='y'),
                                        yaxis3=dict(title='Area harvested (ha)', title_font=dict(color='purple'),
                                        tickfont=dict(color='purple'), side='left', overlaying='y',
-                                       anchor='free', position=0.06, showgrid=False),
-                                       xaxis=dict(domain=[0.12, 1.0]))
+                                       anchor='free', position=0.0, showgrid=False),
+                                       xaxis=dict(title='Jaar', domain=[0.12, 1.0]))
                 st.plotly_chart(fig_land, use_container_width=True)
 
                 #### Conclusie
