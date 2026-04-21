@@ -485,7 +485,7 @@ with Tab_4:
                                               yaxis='y3'))
 
                 fig_land.add_trace(go.Bar(x=df_samen_land['Year'], y=df_samen_land['Aantal_rampen'],
-                                              name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)'),
+                                              name=f'Aantal {ramp_land}s', marker_color='rgba(255, 100, 100, 0.4)',
                                               yaxis='y2'))
 
                 fig_land.update_layout(title=f'Productie {graan_land} in {land_res} vs aantal {ramp_land}s per jaar',
