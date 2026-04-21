@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from nbconvert.filters.strings import files_url_pattern
 from plotly.subplots import make_subplots
 import plotly.express as px
 
